@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "TwitchPy"
+version = "1.0.0"
+description = "A twitch API wrapper that uses a combination of Gevent and HTTP requests"
+authors = ["Justin <justin@aperturebot.science>"]
+readme = "README.md"
+packages = [{include = "twitch"}]
+repository = "https://github.com/ThatGuyJustin/twitch"
+classifiers = [
+    'Development Status :: 1 - Planning',
+    'License :: OSI Approved :: MIT License',
+    'Intended Audience :: Developers',
+    'Natural Language :: English',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Topic :: Internet',
+    'Topic :: Software Development :: Libraries',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Utilities',
+]
+
+[tool.poetry.dependencies]
+python = ">3.10,<4"
+gevent = "^23.9.1"
+requests = "^2.31.0"
+websocket-client = "^1.6.4"
+flask = "^2.1.1"
+six = "^1.16.0"
+
+regex = { version = "^2022.10.31", optional = true }
+pylibyaml = { version = "^0.1.0", optional = true }
+ujson = { version = "^5.2.0", optional = true }
+wsaccel = { version = "^0.6.3", optional = true }
+
+[tool.poetry.extras]
+performance = ["regex", "pylibyaml", "ujson", "wsaccel"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
