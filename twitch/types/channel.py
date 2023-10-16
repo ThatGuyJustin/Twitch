@@ -1,5 +1,59 @@
-from twitch.types.base import SlottedModel, Field, text, datetime, ListField
+from twitch.types.base import SlottedModel, Field, text, datetime, ListField, enum
 from twitch.types.user import User
+
+
+class ChannelGuestStarState:
+    INVITED = "invited"
+    ACCEPTED = "accepted"
+    READY = "ready"
+    BACKSTAGE = "backstage"
+    LIVE = "live"
+    REMOVED = "removed"
+
+
+class ChannelPollChoices(SlottedModel):
+    id = Field(text)
+    title = Field(text)
+    bits_votes = Field(text)
+    channel_points_votes = Field(text)
+    votes = Field(int)
+
+
+class ChannelPollVoteSettings(SlottedModel):
+    is_enabled = Field(bool)
+    amount_per_vote = Field(int)
+
+
+class ChannelPollStatus:
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+    TERMINATED = "terminated"
+
+
+class ChannelPoll(SlottedModel):
+    id = Field(int)
+    broadcaster_user_id = Field(int)
+    broadcaster_user_login = Field(text)
+    broadcaster_user_name = Field(text)
+    title = Field(text)
+    choices = ListField(ChannelPollChoices, default=[])
+    bits_voting = Field(ChannelPollVoteSettings)
+    channel_points_voting = Field(ChannelPollVoteSettings)
+    started_at = Field(datetime)
+    ends_at = Field(datetime)
+    status = Field(enum(ChannelPollStatus), create=False)
+
+    @property
+    def broadcaster(self):
+        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
+                                 "name": self.broadcaster_user_name})
+
+
+class ChannelPointsRewardRedemptionStatus:
+    UNFULFILLED = "unfulfilled"
+    UNKNOWN = "unknown"
+    FULFILLED = "fulfilled"
+    CANCELED = "canceled"
 
 
 class ChannelPointsRewardImage(SlottedModel):
@@ -68,6 +122,28 @@ class ChannelPredictionOutcomes(SlottedModel):
     top_predictors = ListField(ChannelPredictionTopPredictors, default=[])
 
 
+class ChannelPredictionStatus:
+    RESOLVED = "resolved"
+    CANCELED = "canceled"
+
+
+class ChannelPrediction(SlottedModel):
+    id = Field(text)
+    title = Field(text)
+    broadcaster_user_id = Field(int)
+    broadcaster_user_login = Field(text)
+    broadcaster_user_name = Field(text)
+    outcomes = ListField(ChannelPredictionOutcomes)
+    started_at = Field(datetime)
+    locks_at = Field(datetime, create=False)
+    ended_at = Field(datetime, create=False)
+
+    @property
+    def broadcaster(self):
+        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
+                                 "name": self.broadcaster_user_name})
+
+
 class ChannelSubscriptionMessageEmotes(SlottedModel):
     begin = Field(int)
     end = Field(int)
@@ -94,12 +170,44 @@ class ChannelSubscription(SlottedModel):
         return int(self._tier.replace('0', '', -1))
 
 
+class GoalType:
+    FOLLOW = "follow"
+    SUBSCRIPTION = "subscription"
+    SUBSCRIPTION_COUNT = "subscription_count"
+    NEW_SUBSCRIPTION = "new_subscription"
+    NEW_SUBSCRIPTION_COUNT = "new_subscription_count"
+
+
+class Goal(SlottedModel):
+    id = Field(text)
+    broadcaster_user_id = Field(text)
+    broadcaster_user_login = Field(text)
+    broadcaster_user_name = Field(text)
+    type = Field(enum(GoalType))
+    description = Field(text)
+    is_achieved = Field(bool)
+    current_amount = Field(int)
+    target_amount = Field(int)
+    started_at = Field(datetime)
+    ended_at = Field(datetime, default=None)
+
+    @property
+    def broadcaster(self):
+        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
+                                 "name": self.broadcaster_user_name})
+
+
+class HypeTrainContributionType:
+    BITS = "bits"
+    SUBSCRIPTION = "subscription"
+    OTHER = "OTHER"
+
+
 class HypeTrainContribution(SlottedModel):
     user_id = Field(text)
     user_login = Field(text)
     user_name = Field(text)
-    # TODO: 3nUm!!!
-    type = Field(text)
+    type = Field(enum(HypeTrainContributionType))
     total = Field(int)
 
     @property
@@ -129,3 +237,62 @@ class HypeTrain(SlottedModel):
         return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
                                  "name": self.broadcaster_user_name})
 
+
+class ShieldMode(SlottedModel):
+    broadcaster_user_id = Field(int)
+    broadcaster_user_login = Field(text)
+    broadcaster_user_name = Field(text)
+    moderator_user_id = Field(int)
+    moderator_user_login = Field(text)
+    moderator_user_name = Field(text)
+    started_at = Field(datetime, create=False)
+    ended_at = Field(datetime, create=False)
+
+    @property
+    def broadcaster(self):
+        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
+                                 "name": self.broadcaster_user_name})
+
+    @property
+    def moderator(self):
+        return User.create(data={"id": self.moderator_user_id, "login": self.moderator_user_login,
+                                 "name": self.moderator_user_name})
+
+
+class ShoutOut(SlottedModel):
+    broadcaster_user_id = Field(int)
+    broadcaster_user_login = Field(text)
+    broadcaster_user_name = Field(text)
+    to_broadcaster_user_id = Field(int)
+    to_broadcaster_user_login = Field(text)
+    to_broadcaster_user_name = Field(text)
+    moderator_user_id = Field(int)
+    moderator_user_login = Field(text)
+    moderator_user_name = Field(text)
+    viewer_count = Field(int)
+    started_at = Field(datetime)
+    cooldown_ends_at = Field(datetime)
+    target_cooldown_ends_at = Field(datetime)
+
+    @property
+    def broadcaster(self):
+        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
+                                 "name": self.broadcaster_user_name})
+
+    @property
+    def to_broadcaster(self):
+        return User.create(data={"id": self.to_broadcaster_user_id, "login": self.to_broadcaster_user_login,
+                                 "name": self.to_broadcaster_user_name})
+
+    @property
+    def moderator(self):
+        return User.create(data={"id": self.moderator_user_id, "login": self.moderator_user_login,
+                                 "name": self.moderator_user_name})
+
+
+class StreamOnlineType:
+    LIVE = "live"
+    PLAYLIST = "playlist"
+    WATCH_PARTY = "watch_party"
+    PREMIERE = "premiere"
+    RE_RUN = "re_run"

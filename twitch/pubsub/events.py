@@ -1,13 +1,14 @@
 from six import with_metaclass
 
-from twitch.types.base import ModelMeta, Field, Model, text, ListField, datetime, SlottedModel
+from twitch.types.base import ModelMeta, Field, Model, text, ListField, datetime, SlottedModel, enum
 from twitch.types.channel import ChannelPointsReward, ChannelPredictionOutcomes, ChannelSubscription, \
-    ChannelSubscriptionMessage, HypeTrain
+    ChannelSubscriptionMessage, HypeTrain, ChannelGuestStarState, ChannelPoll, ChannelPointsRewardRedemptionStatus, \
+    ChannelPrediction, ChannelPredictionStatus, GoalType, ShieldMode, ShoutOut, Goal, StreamOnlineType
 from twitch.types.charity import Charity, CharityDonationAmount
 from twitch.types.entitlement import DropEntitlementData
 from twitch.types.extension import Product
 from twitch.types.user import User
-from twitch.util.string import underscore
+from twitch.util.string import get_event_name_from_doc_string
 
 # Mapping of twitch event name to our event classes
 EVENTS_MAP = {}
@@ -17,11 +18,8 @@ class PubSubEventMeta(ModelMeta):
     def __new__(mcs, name, parents, dct):
         obj = super(PubSubEventMeta, mcs).__new__(mcs, name, parents, dct)
 
-        # TODO: Make work with weird twitch event sub names
-        # Such as "channel.guest_star_session.begin"
-        # Notice how it has a "." delimiter, but also "_"'s between the words.
         if name != 'PubSubEvent':
-            EVENTS_MAP[underscore(name)] = obj
+            EVENTS_MAP[get_event_name_from_doc_string(obj.__doc__)] = obj
 
         return obj
 
@@ -161,6 +159,9 @@ class Broadcaster(SlottedModel):
 
 @wraps_model(BaseEvent)
 class ChannelBan(PubSubEvent):
+    """
+    Twitch Name: 'channel.ban'
+    """
     moderator_user_id = Field(int)
     moderator_user_login = Field(text)
     moderator_user_name = Field(text)
@@ -177,6 +178,9 @@ class ChannelBan(PubSubEvent):
 
 @wraps_model(BaseEvent)
 class ChannelSubscribe(PubSubEvent):
+    """
+    Twitch Name: 'channel.subscribe'
+    """
     _tier = Field(text, alias='tier')
     is_gift = Field(bool)
 
@@ -187,12 +191,18 @@ class ChannelSubscribe(PubSubEvent):
 
 @wraps_model(BaseEvent)
 class ChannelCheer(PubSubEvent):
+    """
+    Twitch Name: 'channel.cheer'
+    """
     is_anonymous = Field(bool)
     message = Field(text)
     bits = Field(int)
 
 
 class ChannelUpdate(PubSubEvent):
+    """
+    Twitch Name: 'channel.update'
+    """
     broadcaster_user_id = Field(int)
     broadcaster_user_login = Field(text)
     broadcaster_user_name = Field(text)
@@ -210,6 +220,9 @@ class ChannelUpdate(PubSubEvent):
 
 @wraps_model(BaseEvent)
 class ChannelUnban(PubSubEvent):
+    """
+    Twitch Name: 'channel.unban'
+    """
     moderator_user_id = Field(int)
     moderator_user_login = Field(text)
     moderator_user_name = Field(text)
@@ -222,10 +235,16 @@ class ChannelUnban(PubSubEvent):
 
 @wraps_model(BaseEvent)
 class ChannelFollow(PubSubEvent):
+    """
+    Twitch Name: 'channel.follow'
+    """
     followed_at = Field(datetime)
 
 
 class ChannelRaid(PubSubEvent):
+    """
+    Twitch Name: 'channel.raid'
+    """
     from_broadcaster_user_id = Field(int)
     from_broadcaster_user_login = Field(text)
     from_broadcaster_user_name = Field(text)
@@ -248,25 +267,33 @@ class ChannelRaid(PubSubEvent):
 @wraps_model(BaseEvent)
 class ChannelModeratorAdd(PubSubEvent):
     """
-
+    Twitch Name: 'channel.moderator.add'
     """
+    pass
 
 
 @wraps_model(BaseEvent)
 class ChannelModeratorRemove(PubSubEvent):
     """
-
+    Twitch Name: 'channel.moderator.remove'
     """
+    pass
 
 
 @wraps_model(Broadcaster)
 class ChannelGuestStarSessionBegin(PubSubEvent):
+    """
+    Twitch Name: 'channel.guest_star_session.begin'
+    """
     session_id = Field(text)
     started_at = Field(datetime)
 
 
 @wraps_model(Broadcaster)
 class ChannelGuestStarSessionEnd(PubSubEvent):
+    """
+    Twitch Name: 'channel.guest_star_session.end'
+    """
     session_id = Field(text)
     started_at = Field(datetime)
     ended_at = Field(datetime)
@@ -274,16 +301,18 @@ class ChannelGuestStarSessionEnd(PubSubEvent):
 
 @wraps_model(Broadcaster)
 class ChannelGuestStarGuestUpdate(PubSubEvent):
+    """
+    Twitch Name: 'channel.guest_star_session.update'
+    """
     session_id = Field(text)
-    moderator_user_id = Field(int)
-    moderator_user_name = Field(text)
-    moderator_user_login = Field(text)
+    moderator_user_id = Field(int, create=False)
+    moderator_user_name = Field(text, create=False)
+    moderator_user_login = Field(text, create=False)
     guest_user_id = Field(int)
     guest_user_name = Field(text)
     guest_user_login = Field(text)
     slot_id = Field(int)
-    # TODO: Enum this
-    state = Field(text)
+    state = Field(enum(ChannelGuestStarState))
     host_video_enabled = Field(bool, default=None)
     host_audio_enabled = Field(bool, default=None)
     host_volume = Field(int, default=None)
@@ -301,6 +330,9 @@ class ChannelGuestStarGuestUpdate(PubSubEvent):
 
 @wraps_model(Broadcaster)
 class ChannelGuestStarSettingsUpdate(PubSubEvent):
+    """
+    Twitch Name: 'channel.guest_star_settings.update'
+    """
     is_moderator_send_live_enabled = Field(bool)
     slot_count = Field(int)
     is_browser_source_audio_enabled = Field(bool)
@@ -308,129 +340,118 @@ class ChannelGuestStarSettingsUpdate(PubSubEvent):
     group_layout = Field(text)
 
 
-@wraps_model(Broadcaster)
-class ChannelPollEvent(PubSubEvent):
-    id = Field(int)
-    title = Field(text)
-    # TODO: Make Poll Choices a type
-    choices = ListField(text, default=[])
-    # TODO: Make bits_voting a type
-    bits_voting = Field(None)
-    # TODO: Make channel_points_voting SETTINGS a type
-    channel_points_voting = Field(None)
-    started_at = Field(datetime)
-    ends_at = Field(datetime)
-
-
-@wraps_model(ChannelPollEvent)
+@wraps_model(ChannelPoll)
 class ChannelPollBegin(PubSubEvent):
     """
-
+    Twitch Name: 'channel.poll.begin'
     """
 
 
-@wraps_model(ChannelPollEvent)
+@wraps_model(ChannelPoll)
 class ChannelPollUpdate(PubSubEvent):
     """
-
+    Twitch Name: 'channel.poll.progress'
     """
 
 
-@wraps_model(ChannelPollEvent)
+@wraps_model(ChannelPoll)
 class ChannelPollEnd(PubSubEvent):
-    # TODO: Make this an enum
-    status = Field(text)
+    """
+    Twitch Name: 'channel.poll.end'
+    """
 
 
 @wraps_model(ChannelPointsReward)
 class ChannelPointsCustomRewardAdd(PubSubEvent):
     """
-
+    Twitch Name: 'channel.channel_points_custom_reward.add'
     """
 
 
 @wraps_model(ChannelPointsReward)
 class ChannelPointsCustomRewardUpdate(PubSubEvent):
     """
-
+    Twitch Name: 'channel.channel_points_custom_reward.update'
     """
 
 
 @wraps_model(ChannelPointsReward)
 class ChannelPointsCustomRewardRemove(PubSubEvent):
     """
-
+    Twitch Name: 'channel.channel_points_custom_reward.remove'
     """
 
 
 @wraps_model(BaseEvent)
 class ChannelPointsCustomRewardRedemptionAdd(PubSubEvent):
+    """
+    Twitch Name: 'channel.channel_points_custom_reward_redemption.add'
+    """
     id = Field(text)
     user_input = Field(text)
-    # TODO: Convert to Enum
-    status = Field(text)
+    status = Field(enum(ChannelPointsRewardRedemptionStatus), default=ChannelPointsRewardRedemptionStatus.UNFULFILLED)
     reward = Field(ChannelPointsReward)
     redeemed_at = Field(datetime)
 
 
 @wraps_model(BaseEvent)
 class ChannelPointsCustomRewardRedemptionUpdate(PubSubEvent):
+    """
+    Twitch Name: 'channel.channel_points_custom_reward_redemption.update'
+    """
     id = Field(text)
     user_input = Field(text)
-    # TODO: Convert to Enum
-    status = Field(text)
+    status = Field(enum(ChannelPointsRewardRedemptionStatus))
     reward = Field(ChannelPointsReward)
     redeemed_at = Field(datetime)
 
 
-@wraps_model(Broadcaster)
+@wraps_model(ChannelPrediction)
 class ChannelPredictionBegin(PubSubEvent):
-    id = Field(text)
-    title = Field(text)
-    outcomes = ListField(ChannelPredictionOutcomes)
-    started_at = Field(datetime)
-    locks_at = Field(datetime)
+    """
+    Twitch Name: 'channel.prediction.begin'
+    """
+    pass
 
 
-@wraps_model(Broadcaster)
+@wraps_model(ChannelPrediction)
 class ChannelPredictionProgress(PubSubEvent):
-    id = Field(text)
-    title = Field(text)
-    outcomes = ListField(ChannelPredictionOutcomes)
-    started_at = Field(datetime)
-    locks_at = Field(datetime)
+    """
+    Twitch Name: 'channel.prediction.progress'
+    """
+    pass
 
 
-@wraps_model(Broadcaster)
+@wraps_model(ChannelPrediction)
 class ChannelPredictionLock(PubSubEvent):
-    id = Field(text)
-    title = Field(text)
-    outcomes = ListField(ChannelPredictionOutcomes)
-    started_at = Field(datetime)
-    locks_at = Field(datetime)
+    """
+    Twitch Name: 'channel.prediction.lock'
+    """
+    pass
 
 
-@wraps_model(Broadcaster)
-class ChannelPredictionLock(PubSubEvent):
-    id = Field(text)
-    title = Field(text)
+@wraps_model(ChannelPrediction)
+class ChannelPredictionEnd(PubSubEvent):
+    """
+    Twitch Name: 'channel.prediction.end'
+    """
     winning_outcome_id = Field(text)
-    outcomes = ListField(ChannelPredictionOutcomes)
-    # TODO: Convert to enum
-    status = Field(text)
-    started_at = Field(datetime)
-    ended_at = Field(datetime)
+    status = Field(enum(ChannelPredictionStatus))
 
 
 @wraps_model(ChannelSubscription)
 class ChannelSubscriptionEnd(PubSubEvent):
     """
-
+    Twitch Name: 'channel.subscription.end'
     """
+    pass
 
 
 @wraps_model(ChannelSubscription)
 class ChannelSubscriptionGift(PubSubEvent):
+    """
+    Twitch Name: 'channel.subscription.gift'
+    """
     total = Field(int)
     cumulative_total = Field(int, default=None)
     is_anonymous = Field(bool)
@@ -438,6 +459,9 @@ class ChannelSubscriptionGift(PubSubEvent):
 
 @wraps_model(ChannelSubscription)
 class ChannelSubscriptionMessage(PubSubEvent):
+    """
+    Twitch Name: 'channel.subscription.message'
+    """
     message = Field(ChannelSubscriptionMessage)
     cumulative_months = Field(int)
     streak_months = Field(int)
@@ -446,6 +470,9 @@ class ChannelSubscriptionMessage(PubSubEvent):
 
 @wraps_model(Charity)
 class CharityDonation(PubSubEvent):
+    """
+    Twitch Name: 'channel.charity_campaign.donate'
+    """
     user_id = Field(text)
     user_login = Field(text)
     user_name = Field(text)
@@ -458,6 +485,9 @@ class CharityDonation(PubSubEvent):
 
 @wraps_model(Charity)
 class CharityCampaignStart(PubSubEvent):
+    """
+    Twitch Name: 'channel.charity_campaign.start'
+    """
     current_amount = Field(CharityDonationAmount)
     target_amount = Field(CharityDonationAmount)
     started_at = Field(datetime)
@@ -465,53 +495,69 @@ class CharityCampaignStart(PubSubEvent):
 
 @wraps_model(Charity)
 class CharityCampaignProgress(PubSubEvent):
+    """
+    Twitch Name: 'channel.charity_campaign.progress'
+    """
     current_amount = Field(CharityDonationAmount)
     target_amount = Field(CharityDonationAmount)
 
 
 @wraps_model(Charity)
 class CharityCampaignStop(PubSubEvent):
+    """
+    Twitch Name: 'channel.charity_campaign.stop'
+    """
     current_amount = Field(CharityDonationAmount)
     target_amount = Field(CharityDonationAmount)
     stopped_at = Field(datetime)
 
 
 class DropEntitlementGrant(PubSubEvent):
+    """
+    Twitch Name: 'drop.entitlement.grant'
+    """
     id = Field(text)
     data = ListField(DropEntitlementData, default=[])
 
 
 @wraps_model(BaseEvent)
 class ExtensionBitsTransactionCreate(PubSubEvent):
+    """
+    Twitch Name: 'extension.bits_transaction.create'
+    """
     extension_client_id = Field(text)
     id = Field(text)
     product = Field(Product)
 
 
-@wraps_model(BaseEvent)
-class Goals(PubSubEvent):
-    id = Field(text)
-    broadcaster_user_id = Field(text)
-    broadcaster_user_login = Field(text)
-    broadcaster_user_name = Field(text)
-    # TODO: Turn into an enum
-    type = Field(text)
-    description = Field(text)
-    is_achieved = Field(bool)
-    current_amount = Field(int)
-    target_amount = Field(int)
-    started_at = Field(datetime)
-    ended_at = Field(datetime, default=None)
+@wraps_model(Goal)
+class GoalBegin(PubSubEvent):
+    """
+    Twitch Name: 'channel.goal.begin'
+    """
+    pass
 
-    @property
-    def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+
+@wraps_model(Goal)
+class GoalProgress(PubSubEvent):
+    """
+    Twitch Name: 'channel.goal.progress'
+    """
+    pass
+
+
+@wraps_model(Goal)
+class GoalEnd(PubSubEvent):
+    """
+    Twitch Name: 'channel.goal.end'
+    """
+    pass
 
 
 @wraps_model(HypeTrain)
 class HypeTrainBegin(PubSubEvent):
     """
+    Twitch Name: 'channel.hype_train.begin'
     """
     pass
 
@@ -519,6 +565,7 @@ class HypeTrainBegin(PubSubEvent):
 @wraps_model(HypeTrain)
 class HypeTrainProgress(PubSubEvent):
     """
+    Twitch Name: 'channel.hype_train.progress'
     """
     pass
 
@@ -526,19 +573,19 @@ class HypeTrainProgress(PubSubEvent):
 @wraps_model(HypeTrain)
 class HypeTrainEnds(PubSubEvent):
     """
+    Twitch Name: 'channel.hype_train.end'
     """
     pass
 
 
-# TODO: Map the Channel shoutout events along with the shield mode events
-
-
 class StreamOnline(PubSubEvent):
+    """
+    Twitch Name: 'stream.online'
+    """
     broadcaster_user_id = Field(text)
     broadcaster_user_login = Field(text)
     broadcaster_user_name = Field(text)
-    # TODO: ENUM THIS!
-    type = Field(text)
+    type = Field(enum(StreamOnlineType))
     started_at = Field(datetime)
 
     @property
@@ -548,6 +595,9 @@ class StreamOnline(PubSubEvent):
 
 
 class StreamOffline(PubSubEvent):
+    """
+    Twitch Name: 'stream.offline'
+    """
     broadcaster_user_id = Field(text)
     broadcaster_user_login = Field(text)
     broadcaster_user_name = Field(text)
@@ -559,6 +609,9 @@ class StreamOffline(PubSubEvent):
 
 
 class UserAuthorizationGrant(PubSubEvent):
+    """
+    Twitch Name: 'user.authorization.grant'
+    """
     client_id = Field(text)
     user_id = Field(text)
     user_login = Field(text)
@@ -566,6 +619,9 @@ class UserAuthorizationGrant(PubSubEvent):
 
 
 class UserAuthorizationRevoke(PubSubEvent):
+    """
+    Twitch Name: 'user.authorization.revoke'
+    """
     client_id = Field(text)
     user_id = Field(text)
     user_login = Field(text)
@@ -573,9 +629,44 @@ class UserAuthorizationRevoke(PubSubEvent):
 
 
 class UserUpdate(PubSubEvent):
+    """
+    Twitch Name: 'user.update'
+    """
     user_id = Field(text)
     user_login = Field(text)
     user_name = Field(text)
     email = Field(text)
     email_verified = Field(text)
     description = Field(text)
+
+
+@wraps_model(ShieldMode)
+class ShieldModeBegin(PubSubEvent):
+    """
+    Twitch Name: 'channel.shield_mode.begin'
+    """
+    pass
+
+
+@wraps_model(ShieldMode)
+class ShieldModeEnd(PubSubEvent):
+    """
+    Twitch Name: 'channel.shield_mode.end'
+    """
+    pass
+
+
+@wraps_model(ShoutOut)
+class ShoutOutCreate(PubSubEvent):
+    """
+    Twitch Name: 'channel.shoutout.create'
+    """
+    pass
+
+
+@wraps_model(ShoutOut)
+class ShoutOutReceived(PubSubEvent):
+    """
+    Twitch Name: 'channel.shoutout.receive'
+    """
+    pass
