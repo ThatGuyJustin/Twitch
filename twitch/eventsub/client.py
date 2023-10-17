@@ -14,8 +14,8 @@ except ImportError:
     import json
 
 # TODO:
-# Dynamic mapping
-# HeartBeat
+#   Dynamic mapping
+#   HeartBeat
 
 
 class EventSubClient(LoggingClass):
@@ -26,7 +26,6 @@ class EventSubClient(LoggingClass):
         self.max_reconnects = 1
         self.remember_past_events = 15
         # TODO: CONFIG END
-
 
         self.ws = None
         self.ws_event = gevent.event.Event()  # noqa
@@ -96,7 +95,6 @@ class EventSubClient(LoggingClass):
             return
 
         self.log.info(data)
-
 
     def connect_and_run(self, gateway_url=None):
         if gateway_url:

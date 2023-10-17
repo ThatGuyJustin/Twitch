@@ -15,19 +15,19 @@ from twitch.util.string import get_event_name_from_doc_string
 EVENTS_MAP = {}
 
 
-class PubSubEventMeta(ModelMeta):
+class EventSubEventMeta(ModelMeta):
     def __new__(mcs, name, parents, dct):
-        obj = super(PubSubEventMeta, mcs).__new__(mcs, name, parents, dct)
+        obj = super(EventSubEventMeta, mcs).__new__(mcs, name, parents, dct)
 
-        if name != 'PubSubEvent':
+        if name != 'EventSubEvent':
             EVENTS_MAP[get_event_name_from_doc_string(obj.__doc__)] = obj
 
         return obj
 
 
-class PubSubEvent(with_metaclass(PubSubEventMeta, Model)):
+class EventSubEvent(with_metaclass(EventSubEventMeta, Model)):
     """
-    The PubSubEvent class wraps various functionality for events passed to us
+    The EventSubEvent class wraps various functionality for events passed to us
     over the pubsub websocket, and serves as a simple proxy to inner values for
     some wrapped event-types (e.g. MessageCreate only contains a message, so we
     proxy all attributes to the inner message object).
@@ -159,7 +159,7 @@ class Broadcaster(SlottedModel):
 
 
 @wraps_model(BaseEvent)
-class ChannelBan(PubSubEvent):
+class ChannelBan(EventSubEvent):
     """
     Twitch Name: 'channel.ban'
     """
@@ -178,7 +178,7 @@ class ChannelBan(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ChannelSubscribe(PubSubEvent):
+class ChannelSubscribe(EventSubEvent):
     """
     Twitch Name: 'channel.subscribe'
     """
@@ -191,7 +191,7 @@ class ChannelSubscribe(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ChannelCheer(PubSubEvent):
+class ChannelCheer(EventSubEvent):
     """
     Twitch Name: 'channel.cheer'
     """
@@ -200,7 +200,7 @@ class ChannelCheer(PubSubEvent):
     bits = Field(int)
 
 
-class ChannelUpdate(PubSubEvent):
+class ChannelUpdate(EventSubEvent):
     """
     Twitch Name: 'channel.update'
     """
@@ -220,7 +220,7 @@ class ChannelUpdate(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ChannelUnban(PubSubEvent):
+class ChannelUnban(EventSubEvent):
     """
     Twitch Name: 'channel.unban'
     """
@@ -235,14 +235,14 @@ class ChannelUnban(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ChannelFollow(PubSubEvent):
+class ChannelFollow(EventSubEvent):
     """
     Twitch Name: 'channel.follow'
     """
     followed_at = Field(datetime)
 
 
-class ChannelRaid(PubSubEvent):
+class ChannelRaid(EventSubEvent):
     """
     Twitch Name: 'channel.raid'
     """
@@ -266,7 +266,7 @@ class ChannelRaid(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ChannelModeratorAdd(PubSubEvent):
+class ChannelModeratorAdd(EventSubEvent):
     """
     Twitch Name: 'channel.moderator.add'
     """
@@ -274,7 +274,7 @@ class ChannelModeratorAdd(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ChannelModeratorRemove(PubSubEvent):
+class ChannelModeratorRemove(EventSubEvent):
     """
     Twitch Name: 'channel.moderator.remove'
     """
@@ -282,7 +282,7 @@ class ChannelModeratorRemove(PubSubEvent):
 
 
 @wraps_model(Broadcaster)
-class ChannelGuestStarSessionBegin(PubSubEvent):
+class ChannelGuestStarSessionBegin(EventSubEvent):
     """
     Twitch Name: 'channel.guest_star_session.begin'
     """
@@ -291,7 +291,7 @@ class ChannelGuestStarSessionBegin(PubSubEvent):
 
 
 @wraps_model(Broadcaster)
-class ChannelGuestStarSessionEnd(PubSubEvent):
+class ChannelGuestStarSessionEnd(EventSubEvent):
     """
     Twitch Name: 'channel.guest_star_session.end'
     """
@@ -301,7 +301,7 @@ class ChannelGuestStarSessionEnd(PubSubEvent):
 
 
 @wraps_model(Broadcaster)
-class ChannelGuestStarGuestUpdate(PubSubEvent):
+class ChannelGuestStarGuestUpdate(EventSubEvent):
     """
     Twitch Name: 'channel.guest_star_session.update'
     """
@@ -330,7 +330,7 @@ class ChannelGuestStarGuestUpdate(PubSubEvent):
 
 
 @wraps_model(Broadcaster)
-class ChannelGuestStarSettingsUpdate(PubSubEvent):
+class ChannelGuestStarSettingsUpdate(EventSubEvent):
     """
     Twitch Name: 'channel.guest_star_settings.update'
     """
@@ -341,49 +341,49 @@ class ChannelGuestStarSettingsUpdate(PubSubEvent):
 
 
 @wraps_model(ChannelPoll)
-class ChannelPollBegin(PubSubEvent):
+class ChannelPollBegin(EventSubEvent):
     """
     Twitch Name: 'channel.poll.begin'
     """
 
 
 @wraps_model(ChannelPoll)
-class ChannelPollUpdate(PubSubEvent):
+class ChannelPollUpdate(EventSubEvent):
     """
     Twitch Name: 'channel.poll.progress'
     """
 
 
 @wraps_model(ChannelPoll)
-class ChannelPollEnd(PubSubEvent):
+class ChannelPollEnd(EventSubEvent):
     """
     Twitch Name: 'channel.poll.end'
     """
 
 
 @wraps_model(ChannelPointsReward)
-class ChannelPointsCustomRewardAdd(PubSubEvent):
+class ChannelPointsCustomRewardAdd(EventSubEvent):
     """
     Twitch Name: 'channel.channel_points_custom_reward.add'
     """
 
 
 @wraps_model(ChannelPointsReward)
-class ChannelPointsCustomRewardUpdate(PubSubEvent):
+class ChannelPointsCustomRewardUpdate(EventSubEvent):
     """
     Twitch Name: 'channel.channel_points_custom_reward.update'
     """
 
 
 @wraps_model(ChannelPointsReward)
-class ChannelPointsCustomRewardRemove(PubSubEvent):
+class ChannelPointsCustomRewardRemove(EventSubEvent):
     """
     Twitch Name: 'channel.channel_points_custom_reward.remove'
     """
 
 
 @wraps_model(BaseEvent)
-class ChannelPointsCustomRewardRedemptionAdd(PubSubEvent):
+class ChannelPointsCustomRewardRedemptionAdd(EventSubEvent):
     """
     Twitch Name: 'channel.channel_points_custom_reward_redemption.add'
     """
@@ -395,7 +395,7 @@ class ChannelPointsCustomRewardRedemptionAdd(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ChannelPointsCustomRewardRedemptionUpdate(PubSubEvent):
+class ChannelPointsCustomRewardRedemptionUpdate(EventSubEvent):
     """
     Twitch Name: 'channel.channel_points_custom_reward_redemption.update'
     """
@@ -407,7 +407,7 @@ class ChannelPointsCustomRewardRedemptionUpdate(PubSubEvent):
 
 
 @wraps_model(ChannelPrediction)
-class ChannelPredictionBegin(PubSubEvent):
+class ChannelPredictionBegin(EventSubEvent):
     """
     Twitch Name: 'channel.prediction.begin'
     """
@@ -415,7 +415,7 @@ class ChannelPredictionBegin(PubSubEvent):
 
 
 @wraps_model(ChannelPrediction)
-class ChannelPredictionProgress(PubSubEvent):
+class ChannelPredictionProgress(EventSubEvent):
     """
     Twitch Name: 'channel.prediction.progress'
     """
@@ -423,7 +423,7 @@ class ChannelPredictionProgress(PubSubEvent):
 
 
 @wraps_model(ChannelPrediction)
-class ChannelPredictionLock(PubSubEvent):
+class ChannelPredictionLock(EventSubEvent):
     """
     Twitch Name: 'channel.prediction.lock'
     """
@@ -431,7 +431,7 @@ class ChannelPredictionLock(PubSubEvent):
 
 
 @wraps_model(ChannelPrediction)
-class ChannelPredictionEnd(PubSubEvent):
+class ChannelPredictionEnd(EventSubEvent):
     """
     Twitch Name: 'channel.prediction.end'
     """
@@ -440,7 +440,7 @@ class ChannelPredictionEnd(PubSubEvent):
 
 
 @wraps_model(ChannelSubscription)
-class ChannelSubscriptionEnd(PubSubEvent):
+class ChannelSubscriptionEnd(EventSubEvent):
     """
     Twitch Name: 'channel.subscription.end'
     """
@@ -448,7 +448,7 @@ class ChannelSubscriptionEnd(PubSubEvent):
 
 
 @wraps_model(ChannelSubscription)
-class ChannelSubscriptionGift(PubSubEvent):
+class ChannelSubscriptionGift(EventSubEvent):
     """
     Twitch Name: 'channel.subscription.gift'
     """
@@ -458,7 +458,7 @@ class ChannelSubscriptionGift(PubSubEvent):
 
 
 @wraps_model(ChannelSubscription)
-class ChannelSubscriptionMessage(PubSubEvent):
+class ChannelSubscriptionMessage(EventSubEvent):
     """
     Twitch Name: 'channel.subscription.message'
     """
@@ -469,7 +469,7 @@ class ChannelSubscriptionMessage(PubSubEvent):
 
 
 @wraps_model(Charity)
-class CharityDonation(PubSubEvent):
+class CharityDonation(EventSubEvent):
     """
     Twitch Name: 'channel.charity_campaign.donate'
     """
@@ -484,7 +484,7 @@ class CharityDonation(PubSubEvent):
 
 
 @wraps_model(Charity)
-class CharityCampaignStart(PubSubEvent):
+class CharityCampaignStart(EventSubEvent):
     """
     Twitch Name: 'channel.charity_campaign.start'
     """
@@ -494,7 +494,7 @@ class CharityCampaignStart(PubSubEvent):
 
 
 @wraps_model(Charity)
-class CharityCampaignProgress(PubSubEvent):
+class CharityCampaignProgress(EventSubEvent):
     """
     Twitch Name: 'channel.charity_campaign.progress'
     """
@@ -503,7 +503,7 @@ class CharityCampaignProgress(PubSubEvent):
 
 
 @wraps_model(Charity)
-class CharityCampaignStop(PubSubEvent):
+class CharityCampaignStop(EventSubEvent):
     """
     Twitch Name: 'channel.charity_campaign.stop'
     """
@@ -512,7 +512,7 @@ class CharityCampaignStop(PubSubEvent):
     stopped_at = Field(datetime)
 
 
-class DropEntitlementGrant(PubSubEvent):
+class DropEntitlementGrant(EventSubEvent):
     """
     Twitch Name: 'drop.entitlement.grant'
     """
@@ -521,7 +521,7 @@ class DropEntitlementGrant(PubSubEvent):
 
 
 @wraps_model(BaseEvent)
-class ExtensionBitsTransactionCreate(PubSubEvent):
+class ExtensionBitsTransactionCreate(EventSubEvent):
     """
     Twitch Name: 'extension.bits_transaction.create'
     """
@@ -531,7 +531,7 @@ class ExtensionBitsTransactionCreate(PubSubEvent):
 
 
 @wraps_model(Goal)
-class GoalBegin(PubSubEvent):
+class GoalBegin(EventSubEvent):
     """
     Twitch Name: 'channel.goal.begin'
     """
@@ -539,7 +539,7 @@ class GoalBegin(PubSubEvent):
 
 
 @wraps_model(Goal)
-class GoalProgress(PubSubEvent):
+class GoalProgress(EventSubEvent):
     """
     Twitch Name: 'channel.goal.progress'
     """
@@ -547,7 +547,7 @@ class GoalProgress(PubSubEvent):
 
 
 @wraps_model(Goal)
-class GoalEnd(PubSubEvent):
+class GoalEnd(EventSubEvent):
     """
     Twitch Name: 'channel.goal.end'
     """
@@ -555,7 +555,7 @@ class GoalEnd(PubSubEvent):
 
 
 @wraps_model(HypeTrain)
-class HypeTrainBegin(PubSubEvent):
+class HypeTrainBegin(EventSubEvent):
     """
     Twitch Name: 'channel.hype_train.begin'
     """
@@ -563,7 +563,7 @@ class HypeTrainBegin(PubSubEvent):
 
 
 @wraps_model(HypeTrain)
-class HypeTrainProgress(PubSubEvent):
+class HypeTrainProgress(EventSubEvent):
     """
     Twitch Name: 'channel.hype_train.progress'
     """
@@ -571,14 +571,14 @@ class HypeTrainProgress(PubSubEvent):
 
 
 @wraps_model(HypeTrain)
-class HypeTrainEnds(PubSubEvent):
+class HypeTrainEnds(EventSubEvent):
     """
     Twitch Name: 'channel.hype_train.end'
     """
     pass
 
 
-class StreamOnline(PubSubEvent):
+class StreamOnline(EventSubEvent):
     """
     Twitch Name: 'stream.online'
     """
@@ -594,7 +594,7 @@ class StreamOnline(PubSubEvent):
                                  "name": self.broadcaster_user_name})
 
 
-class StreamOffline(PubSubEvent):
+class StreamOffline(EventSubEvent):
     """
     Twitch Name: 'stream.offline'
     """
@@ -608,7 +608,7 @@ class StreamOffline(PubSubEvent):
                                  "name": self.broadcaster_user_name})
 
 
-class UserAuthorizationGrant(PubSubEvent):
+class UserAuthorizationGrant(EventSubEvent):
     """
     Twitch Name: 'user.authorization.grant'
     """
@@ -618,7 +618,7 @@ class UserAuthorizationGrant(PubSubEvent):
     user_name = Field(text)
 
 
-class UserAuthorizationRevoke(PubSubEvent):
+class UserAuthorizationRevoke(EventSubEvent):
     """
     Twitch Name: 'user.authorization.revoke'
     """
@@ -628,7 +628,7 @@ class UserAuthorizationRevoke(PubSubEvent):
     user_name = Field(text)
 
 
-class UserUpdate(PubSubEvent):
+class UserUpdate(EventSubEvent):
     """
     Twitch Name: 'user.update'
     """
@@ -641,7 +641,7 @@ class UserUpdate(PubSubEvent):
 
 
 @wraps_model(ShieldMode)
-class ShieldModeBegin(PubSubEvent):
+class ShieldModeBegin(EventSubEvent):
     """
     Twitch Name: 'channel.shield_mode.begin'
     """
@@ -649,7 +649,7 @@ class ShieldModeBegin(PubSubEvent):
 
 
 @wraps_model(ShieldMode)
-class ShieldModeEnd(PubSubEvent):
+class ShieldModeEnd(EventSubEvent):
     """
     Twitch Name: 'channel.shield_mode.end'
     """
@@ -657,7 +657,7 @@ class ShieldModeEnd(PubSubEvent):
 
 
 @wraps_model(ShoutOut)
-class ShoutOutCreate(PubSubEvent):
+class ShoutOutCreate(EventSubEvent):
     """
     Twitch Name: 'channel.shoutout.create'
     """
@@ -665,7 +665,7 @@ class ShoutOutCreate(PubSubEvent):
 
 
 @wraps_model(ShoutOut)
-class ShoutOutReceived(PubSubEvent):
+class ShoutOutReceived(EventSubEvent):
     """
     Twitch Name: 'channel.shoutout.receive'
     """
