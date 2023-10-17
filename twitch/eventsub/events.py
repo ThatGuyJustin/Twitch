@@ -1,9 +1,10 @@
 from six import with_metaclass
 
 from twitch.types.base import ModelMeta, Field, Model, text, ListField, datetime, SlottedModel, enum
-from twitch.types.channel import ChannelPointsReward, ChannelPredictionOutcomes, ChannelSubscription, \
+from twitch.types.channel import ChannelPointsReward, ChannelSubscription, \
     ChannelSubscriptionMessage, HypeTrain, ChannelGuestStarState, ChannelPoll, ChannelPointsRewardRedemptionStatus, \
-    ChannelPrediction, ChannelPredictionStatus, GoalType, ShieldMode, ShoutOut, Goal, StreamOnlineType
+    ChannelPrediction, ChannelPredictionStatus, ShieldMode, ShoutOut, Goal, StreamOnlineType, \
+    ChannelGuestStarGroupLayout
 from twitch.types.charity import Charity, CharityDonationAmount
 from twitch.types.entitlement import DropEntitlementData
 from twitch.types.extension import Product
@@ -336,8 +337,7 @@ class ChannelGuestStarSettingsUpdate(PubSubEvent):
     is_moderator_send_live_enabled = Field(bool)
     slot_count = Field(int)
     is_browser_source_audio_enabled = Field(bool)
-    # TODO: Enum this
-    group_layout = Field(text)
+    group_layout = Field(enum(ChannelGuestStarGroupLayout))
 
 
 @wraps_model(ChannelPoll)

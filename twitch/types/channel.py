@@ -2,6 +2,15 @@ from twitch.types.base import SlottedModel, Field, text, datetime, ListField, en
 from twitch.types.user import User
 
 
+class ChannelGuestStarGroupLayout:
+    TILED = "tiled"
+    SCREENSHARE = "screenshare"
+    HORIZONTAL_TOP = "horizontal_top"
+    HORIZONTAL_BOTTOM = "horizontal_bottom"
+    VERTICAL_LEFT = "vertical_left"
+    VERTICAL_RIGHT = "vertical_right"
+
+
 class ChannelGuestStarState:
     INVITED = "invited"
     ACCEPTED = "accepted"
