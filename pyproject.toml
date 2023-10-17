@@ -25,7 +25,7 @@ python = ">3.10,<4"
 gevent = "^23.9.1"
 requests = "^2.31.0"
 websocket-client = "^1.6.4"
-flask = "^2.1.1"
+flask = "^3.0.0"
 six = "^1.16.0"
 
 regex = { version = "^2022.10.31", optional = true }

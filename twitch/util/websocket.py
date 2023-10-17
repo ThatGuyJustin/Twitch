@@ -7,7 +7,7 @@ from twitch.util.logging import LoggingClass
 class Websocket(LoggingClass, websocket.WebSocketApp):
     """
     A utility class which wraps the functionality of :class:`websocket.WebSocketApp`
-    changing its behavior to better conform with standard style across disco.
+    changing its behavior to better conform with standard style across twitch.
 
     The major difference comes with the move from callback functions, to all
     events being piped into a single emitter.
@@ -21,6 +21,7 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
 
         # Hack to get events to emit
         for var in self.__dict__.keys():
+            # TODO: May not work
             if not var.startswith('on_'):
                 continue
 

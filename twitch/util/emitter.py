@@ -76,6 +76,7 @@ class EmitterSubscription:
         if callable(self.conditional):
             if not self.conditional(*args, **kwargs):
                 return
+        # TODO: If websocket client dies, throws Exception
         return self.callback(*args, **kwargs)
 
     def _queue_handler(self):
