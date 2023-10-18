@@ -141,10 +141,9 @@ class EventSubClient(LoggingClass):
         self.log.debug("Twitch EventSub Heartbeat Listener started")
         while True:
             if (self._keepalive_timeout_seconds is not None) and (time.time() - self._last_event_sent) > self._keepalive_timeout_seconds:
-                self.log.warning(f'Twitch failed to send an event in {self._keepalive_timeout_seconds}s, Forcing a connect') # noqa
+                self.log.warning(f'Twitch failed to send an event in {self._keepalive_timeout_seconds}s, Forcing a reconnect') # noqa
                 # maybe need code?
                 self.ws.close()
-                return
             # Dynamicly set mayhaps
             gevent.sleep(5)
 

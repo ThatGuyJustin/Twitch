@@ -40,7 +40,7 @@ class ChannelPollStatus:
 
 
 class ChannelPoll(SlottedModel):
-    id = Field(int)
+    id = Field(text)
     broadcaster_user_id = Field(int)
     broadcaster_user_login = Field(text)
     broadcaster_user_name = Field(text)
@@ -105,8 +105,8 @@ class ChannelPointsReward(SlottedModel):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name}) if self.broadcaster_user_id else None
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name) if self.broadcaster_user_id else None
 
 
 class ChannelPredictionTopPredictors(SlottedModel):
@@ -118,8 +118,7 @@ class ChannelPredictionTopPredictors(SlottedModel):
 
     @property
     def user(self):
-        return User.create(data={"id": self.user_id, "login": self.user_login,
-                                 "name": self.user_name})
+        return User(id=self.user_id, login=self.user_login, name=self.user_name)
 
 
 class ChannelPredictionOutcomes(SlottedModel):
@@ -149,8 +148,8 @@ class ChannelPrediction(SlottedModel):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 class ChannelSubscriptionMessageEmotes(SlottedModel):
@@ -202,8 +201,8 @@ class Goal(SlottedModel):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 class HypeTrainContributionType:
@@ -221,8 +220,7 @@ class HypeTrainContribution(SlottedModel):
 
     @property
     def user(self):
-        return User.create(data={"id": self.user_id, "login": self.user_login,
-                                 "name": self.user_name})
+        return User(id=self.user_id, login=self.user_login, name=self.user_name)
 
 
 class HypeTrain(SlottedModel):
@@ -233,7 +231,7 @@ class HypeTrain(SlottedModel):
     total = Field(int)
     progress = Field(int)
     goal = Field(int)
-    top_contributions = Field(HypeTrainContribution)
+    top_contributions = ListField(HypeTrainContribution)
     last_contribution = Field(HypeTrainContribution)
     level = Field(text)
     started_at = Field(datetime)
@@ -243,8 +241,8 @@ class HypeTrain(SlottedModel):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 class ShieldMode(SlottedModel):
@@ -259,13 +257,12 @@ class ShieldMode(SlottedModel):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
     @property
     def moderator(self):
-        return User.create(data={"id": self.moderator_user_id, "login": self.moderator_user_login,
-                                 "name": self.moderator_user_name})
+        return User(id=self.moderator_user_id, login=self.moderator_user_login, name=self.moderator_user_name)
 
 
 class ShoutOut(SlottedModel):
@@ -285,18 +282,17 @@ class ShoutOut(SlottedModel):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
     @property
     def to_broadcaster(self):
-        return User.create(data={"id": self.to_broadcaster_user_id, "login": self.to_broadcaster_user_login,
-                                 "name": self.to_broadcaster_user_name})
+        return User(id=self.to_broadcaster_user_id, login=self.to_broadcaster_user_login,
+                    name=self.to_broadcaster_user_name)
 
     @property
     def moderator(self):
-        return User.create(data={"id": self.moderator_user_id, "login": self.moderator_user_login,
-                                 "name": self.moderator_user_name})
+        return User(id=self.moderator_user_id, login=self.moderator_user_login, name=self.moderator_user_name)
 
 
 class StreamOnlineType:

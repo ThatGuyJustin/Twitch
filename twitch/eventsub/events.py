@@ -139,12 +139,12 @@ class BaseEvent(SlottedModel):
 
     @property
     def user(self):
-        return User.create(data={"id": self.user_id, "login": self.user_login, "name": self.user_name})
+        return User(id=self.user_id, login=self.user_login, name=self.user_name)
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 class Broadcaster(SlottedModel):
@@ -154,8 +154,8 @@ class Broadcaster(SlottedModel):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 @wraps_model(BaseEvent)
@@ -173,8 +173,7 @@ class ChannelBan(EventSubEvent):
 
     @property
     def moderator(self):
-        return User.create(data={"id": self.moderator_user_id, "login": self.moderator_user_login,
-                                "name": self.moderator_user_name})
+        return User(id=self.moderator_user_id, login=self.moderator_user_login, name=self.moderator_user_name)
 
 
 @wraps_model(BaseEvent)
@@ -215,8 +214,8 @@ class ChannelUpdate(EventSubEvent):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 @wraps_model(BaseEvent)
@@ -230,8 +229,7 @@ class ChannelUnban(EventSubEvent):
 
     @property
     def moderator(self):
-        return User.create(data={"id": self.moderator_user_id, "login": self.moderator_user_login,
-                                "name": self.moderator_user_name})
+        return User(id=self.moderator_user_id, login=self.moderator_user_login, name=self.moderator_user_name)
 
 
 @wraps_model(BaseEvent)
@@ -256,13 +254,13 @@ class ChannelRaid(EventSubEvent):
 
     @property
     def raider(self):
-        return User.create(data={"id": self.from_broadcaster_user_id, "login": self.from_broadcaster_user_login,
-                                 "name": self.from_broadcaster_user_name})
+        return User(id=self.from_broadcaster_user_id, login=self.from_broadcaster_user_login,
+                    name=self.from_broadcaster_user_name)
 
     @property
     def raided(self):
-        return User.create(data={"id": self.to_broadcaster_user_id, "login": self.to_broadcaster_user_login,
-                                 "name": self.to_broadcaster_user_name})
+        return User(id=self.to_broadcaster_user_id, login=self.to_broadcaster_user_login,
+                    name=self.to_broadcaster_user_name)
 
 
 @wraps_model(BaseEvent)
@@ -320,13 +318,11 @@ class ChannelGuestStarGuestUpdate(EventSubEvent):
 
     @property
     def moderator(self):
-        return User.create(data={"id": self.moderator_user_id, "login": self.moderator_user_name,
-                                 "name": self.moderator_user_login})
+        return User(id=self.moderator_user_id, login=self.moderator_user_login, name=self.moderator_user_name)
 
     @property
     def guest(self):
-        return User.create(data={"id": self.guest_user_id, "login": self.guest_user_name,
-                                 "name": self.guest_user_login})
+        return User(id=self.guest_user_id, login=self.guest_user_name, name=self.guest_user_login)
 
 
 @wraps_model(Broadcaster)
@@ -480,7 +476,7 @@ class CharityDonation(EventSubEvent):
 
     @property
     def user(self):
-        return User.create(data={"id": self.user_id, "login": self.user_login, "name": self.user_name})
+        return User(id=self.user_id, login=self.user_login, name=self.user_name)
 
 
 @wraps_model(Charity)
@@ -590,8 +586,8 @@ class StreamOnline(EventSubEvent):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 class StreamOffline(EventSubEvent):
@@ -604,8 +600,8 @@ class StreamOffline(EventSubEvent):
 
     @property
     def broadcaster(self):
-        return User.create(data={"id": self.broadcaster_user_id, "login": self.broadcaster_user_login,
-                                 "name": self.broadcaster_user_name})
+        return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
+                    name=self.broadcaster_user_name)
 
 
 class UserAuthorizationGrant(EventSubEvent):

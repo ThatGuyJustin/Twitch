@@ -213,11 +213,14 @@ def datetime(data):
 
     for fmt in DATETIME_FORMATS:
         try:
-            return real_datetime.strptime(data.rsplit('+', 1)[0], fmt)
+            return real_datetime.strptime(f"{data[:-2]}Z", fmt)
         except (ValueError, TypeError):
             continue
 
-    raise ValueError('Failed to convert `{}` to datetime'.format(data))
+    try:
+        return real_datetime.fromisoformat(data)
+    except (ValueError, TypeError):
+        raise ValueError('Failed to convert `{}` to datetime'.format(data))
 
 
 def text(obj):
