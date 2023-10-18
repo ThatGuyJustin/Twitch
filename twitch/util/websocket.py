@@ -6,7 +6,7 @@ from twitch.util.logging import LoggingClass
 
 class Websocket(LoggingClass, websocket.WebSocketApp):
     """
-    A utility class which wraps the functionality of :class:`websocket.WebSocketApp`
+    A utility class which wraps the functionality of: class:`websocket.WebSocketApp`
     changing its behavior to better conform with standard style across twitch.
 
     The major difference comes with the move from callback functions, to all
@@ -14,7 +14,7 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
     """
     def __init__(self, *args, **kwargs):
         LoggingClass.__init__(self)
-        websocket.setdefaulttimeout(5)
+        websocket.setdefaulttimeout(25)
         websocket.WebSocketApp.__init__(self, *args, **kwargs)
 
         self.emitter = Emitter()
