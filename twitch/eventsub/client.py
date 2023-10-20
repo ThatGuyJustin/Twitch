@@ -3,7 +3,6 @@ import time
 from json import JSONDecodeError
 
 import gevent
-import gevent.event
 
 from websocket import WebSocketTimeoutException, WebSocketConnectionClosedException
 
@@ -18,7 +17,7 @@ except ImportError:
     import json
 
 class EventSubClient(LoggingClass):
-    def __init__(self, client=None, gateway_url=None):
+    def __init__(self, client, gateway_url=None):
         super(EventSubClient, self).__init__()
 
         # TODO: CONFIG
@@ -29,7 +28,7 @@ class EventSubClient(LoggingClass):
         self._events = client.events
 
         self.ws = None
-        self.ws_event = gevent.event.Event()
+        self.greenlet = None
 
         self.session_id = None
         self.shutting_down = False
@@ -76,7 +75,6 @@ class EventSubClient(LoggingClass):
         print(error)
         if isinstance(error, KeyboardInterrupt):
             self.shutting_down = True
-            self.ws_event.set()
         if isinstance(error, WebSocketTimeoutException):
             return self.log.error('Websocket connection has timed out. An upstream connection issue is likely present.')
         if not isinstance(error, WebSocketConnectionClosedException):
@@ -147,11 +145,13 @@ class EventSubClient(LoggingClass):
             # Dynamicly set mayhaps
             gevent.sleep(5)
 
+    def shutdown(self):
+        if self.ws:
+            self.log.warning("Graceful shutdown initiated")
+            self.ws.shutting_down = True
+            self.ws.close()
 
-    def connect_and_run(self, gateway_url=None):
-        if gateway_url:
-            self._gateway_url = gateway_url
-
+    def connect_and_run(self):
         self.log.info('Opening websocket connection to URL `%s`', self._gateway_url)
         self.ws = Websocket(self._gateway_url)
         self.ws.emitter.on('on_open', self.on_open)
@@ -161,5 +161,4 @@ class EventSubClient(LoggingClass):
         self.ws.run_forever(sslopt={'cert_reqs': ssl.CERT_NONE})
 
     def run(self):
-        gevent.spawn(self.connect_and_run)
-        self.ws_event.wait()
+        self.greenlet = gevent.spawn(self.connect_and_run)

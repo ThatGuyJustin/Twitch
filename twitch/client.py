@@ -1,4 +1,5 @@
 import gevent
+import gevent.event
 
 from twitch.eventsub.client import EventSubClient
 from twitch.util.config import Config
@@ -61,22 +62,44 @@ class Client(LoggingClass):
         self.config = config
 
         self.events = Emitter()
-        # self.packets = Emitter()
 
+        # TODO: IRC CLIENT
         # TODO: API CLIENT
+        # self.irc = IRCClient(self.config)
         # self.api = APIClient(self.config)
         self.es = EventSubClient(self)
 
         # TODO: Make methods to dynamically start a flask server or not :)
+        self.running = gevent.event.Event()
+
+
+    def shutdown(self):
+        self.log.info("Graceful shutdown initiated")
+
+        # TODO: Make shutdown methods for each mod
+        self.es.shutdown()
+        self.running.set()
+
+
+
+    def start(self):
+        """
+        Main Client "Eventloop" a blocking request to keep the process running
+        """
+        # TODO: Start things here maybe
+        self.es.run()
+
+        self.running.wait()
+
 
     def run(self):
         """
-        Run the client (e.g. the `GatewayClient`) in a new greenlet.
+        Run the client (e.g. the `Client`) in a new greenlet. (Non-Blocking)
         """
-        return gevent.spawn(self.es.run)
+        return gevent.spawn(self.start)
 
     def run_forever(self):
         """
-        Run the client (e.g. the `GatewayClient`) in the current greenlet.
+        Run the client (e.g. the `Client`) in the current greenlet. (blocking)
         """
-        return self.es.run()
+        return self.start()
