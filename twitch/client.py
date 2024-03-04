@@ -1,6 +1,7 @@
 import gevent
 import gevent.event
 
+from twitch.api.client import APIClient
 from twitch.eventsub.client import EventSubClient
 from twitch.util.config import Config
 from twitch.util.emitter import Emitter
@@ -64,14 +65,12 @@ class Client(LoggingClass):
         self.events = Emitter()
 
         # TODO: IRC CLIENT
-        # TODO: API CLIENT
         # self.irc = IRCClient(self.config)
-        # self.api = APIClient(self.config)
+        self.api = APIClient()
         self.es = EventSubClient(self)
 
         # TODO: Make methods to dynamically start a flask server or not :)
         self.running = gevent.event.Event()
-
 
     def shutdown(self):
         self.log.info("Graceful shutdown initiated")
@@ -79,8 +78,6 @@ class Client(LoggingClass):
         # TODO: Make shutdown methods for each mod
         self.es.shutdown()
         self.running.set()
-
-
 
     def start(self):
         """
@@ -90,7 +87,6 @@ class Client(LoggingClass):
         self.es.run()
 
         self.running.wait()
-
 
     def run(self):
         """

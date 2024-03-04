@@ -170,16 +170,16 @@ class ChannelSubscription(SlottedModel):
     broadcaster_user_id = Field(int)
     broadcaster_user_login = Field(text)
     broadcaster_user_name = Field(text)
-    _tier = Field(text, alias='tier')
-    message = Field(ChannelSubscriptionMessage)
+    tier = Field(int)
+    message = Field(ChannelSubscriptionMessage, create=False)
 
-    @property
-    def tier(self):
-        return int(self._tier.replace('0', '', -1))
+    # @property
+    # def tier(self):
+    #     return int(self._tier.replace('0', '', -1))
 
 
 class GoalType:
-    FOLLOW = "follow"
+    FOLLOW = "follower"
     SUBSCRIPTION = "subscription"
     SUBSCRIPTION_COUNT = "subscription_count"
     NEW_SUBSCRIPTION = "new_subscription"
@@ -269,12 +269,15 @@ class ShoutOut(SlottedModel):
     broadcaster_user_id = Field(int)
     broadcaster_user_login = Field(text)
     broadcaster_user_name = Field(text)
-    to_broadcaster_user_id = Field(int)
-    to_broadcaster_user_login = Field(text)
-    to_broadcaster_user_name = Field(text)
-    moderator_user_id = Field(int)
-    moderator_user_login = Field(text)
-    moderator_user_name = Field(text)
+    to_broadcaster_user_id = Field(int, create=False)
+    to_broadcaster_user_login = Field(text, create=False)
+    to_broadcaster_user_name = Field(text, create=False)
+    from_broadcaster_user_id = Field(int, create=False)
+    from_broadcaster_user_login = Field(text, create=False)
+    from_broadcaster_user_name = Field(text, create=False)
+    moderator_user_id = Field(int, create=False)
+    moderator_user_login = Field(text, create=False)
+    moderator_user_name = Field(text, create=False)
     viewer_count = Field(int)
     started_at = Field(datetime)
     cooldown_ends_at = Field(datetime)
@@ -289,6 +292,11 @@ class ShoutOut(SlottedModel):
     def to_broadcaster(self):
         return User(id=self.to_broadcaster_user_id, login=self.to_broadcaster_user_login,
                     name=self.to_broadcaster_user_name)
+
+    @property
+    def from_broadcaster(self):
+        return User(id=self.from_broadcaster_user_id, login=self.from_broadcaster_user_login,
+                    name=self.from_broadcaster_user_name)
 
     @property
     def moderator(self):

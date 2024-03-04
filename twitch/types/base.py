@@ -3,7 +3,7 @@ import gevent
 import inspect
 
 from datetime import datetime as real_datetime
-from six import with_metaclass
+from twitch.util.metaclass import with_metaclass
 
 from twitch.util.chains import Chainable
 from twitch.util.enum import get_enum_members

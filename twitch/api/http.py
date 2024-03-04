@@ -240,6 +240,9 @@ class Routes:
     # Whisper
     SEND_WHISPER = (HTTPMethod.POST, API_BASE_URL + "/whispers")
 
+    OAUTH_VALIDATE_TOKEN = (HTTPMethod.GET, OAUTH_BASE_URL + "/oauth2/validate")
+    OAUTH_POST_TOKEN = (HTTPMethod.POST, OAUTH_BASE_URL + "/oauth2/token")
+
 
 class APIResponse:
     def __init__(self):

@@ -1,4 +1,4 @@
-from six import with_metaclass
+from twitch.util.metaclass import with_metaclass
 
 from twitch.types.base import ModelMeta, Field, Model, text, ListField, datetime, SlottedModel, enum
 from twitch.types.channel import ChannelPointsReward, ChannelSubscription, \
@@ -458,7 +458,6 @@ class ChannelSubscriptionMessage(EventSubEvent):
     """
     Twitch Name: 'channel.subscription.message'
     """
-    message = Field(ChannelSubscriptionMessage)
     cumulative_months = Field(int)
     streak_months = Field(int)
     duration_months = Field(int)

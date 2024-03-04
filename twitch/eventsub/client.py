@@ -16,6 +16,7 @@ try:
 except ImportError:
     import json
 
+
 class EventSubClient(LoggingClass):
     def __init__(self, client, gateway_url=None):
         super(EventSubClient, self).__init__()
@@ -133,7 +134,6 @@ class EventSubClient(LoggingClass):
         self._events.emit("WEBSOCKET_RECONNECT")
         # maybe code
         self.ws.close()
-
 
     def heartbeat_task(self):
         self.log.debug("Twitch EventSub Heartbeat Listener started")
