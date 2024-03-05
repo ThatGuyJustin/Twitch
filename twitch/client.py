@@ -1,6 +1,7 @@
 import gevent
 import gevent.event
 
+from twitch.irc.client import IRCClient
 from twitch.api.client import APIClient
 from twitch.eventsub.client import EventSubClient
 from twitch.util.config import Config
@@ -67,6 +68,8 @@ class Client(LoggingClass):
         # TODO: IRC CLIENT
         # self.irc = IRCClient(self.config)
         self.api = APIClient()
+        # TODO: API CLIENT
+        self.irc = IRCClient(self)
         self.es = EventSubClient(self)
 
         # TODO: Make methods to dynamically start a flask server or not :)
@@ -77,6 +80,7 @@ class Client(LoggingClass):
 
         # TODO: Make shutdown methods for each mod
         self.es.shutdown()
+        self.irc.shutdown()
         self.running.set()
 
     def start(self):
@@ -84,7 +88,8 @@ class Client(LoggingClass):
         Main Client "Eventloop" a blocking request to keep the process running
         """
         # TODO: Start things here maybe
-        self.es.run()
+        # self.es.run()
+        self.irc.run()
 
         self.running.wait()
 
