@@ -41,7 +41,7 @@ class IRCRawMessage(SlottedModel):
         # Parse params
         while parts:
             if parts[0].startswith(':'):
-                parameters.append(' '.join(parts)[1:])
+                parameters.append(' '.join(parts)[1:].rstrip('\r\n'))
                 break
-            parameters.append(parts.pop(0))
+            parameters.append(parts.pop(0).rstrip('\r\n'))
         return cls(prefix=prefix, tags=tags, command=command, parameters=parameters, raw=copy.copy(message))

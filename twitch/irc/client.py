@@ -86,19 +86,17 @@ class IRCClient(LoggingClass):
             self.irc.shutting_down = True
             self.irc.close()
 
-    def on_message(self, msg):
+    def on_message(self, msg: IRCRawMessage):
         for _msg in msg.split("\r\n"):
             self._events.emit("IRC_WS_RAW", _msg)
             e = IRCRawMessage.from_raw(msg)
 
             if e.command == "PING":
-                return self.on_ping(e)
+                self.send(f"PONG {' '.join(msg.parameters)}")
+                # return
             else:
                 # IF ITS NOT PING
                 pass
-
-    def on_ping(self, msg: IRCRawMessage):
-        self.send(f"PONG {msg.parameters}")
 
     def connect_and_run(self):
         self.log.info('Opening irc connection to URL `%s`', self._irc_url)
