@@ -45,3 +45,56 @@ class IRCRawMessage(SlottedModel):
                 break
             parameters.append(parts.pop(0).rstrip('\r\n'))
         return cls(prefix=prefix, tags=tags, command=command, parameters=parameters, raw=copy.copy(message))
+
+    def to_json(self):
+        to_deploy = {}
+
+        if self.command == "GLOBALUSERSTATE":
+            to_deploy['event_name'] = "ChatReady"
+
+            chat_event = {
+                "user_id": self.tags['user-id'],
+                "badge_info": self.tags['badge-info'],
+                "badges": self.tags['badges'],
+                "color": self.tags['color'],
+                "display_name": self.tags['display-name'],
+                "emote_sets": self.tags['emote-sets'].split(","),
+                "user_type": self.tags['user-type']
+            }
+
+            to_deploy['event'] = chat_event
+
+            return to_deploy
+
+        if self.command == "PRIVMSG":
+            to_deploy['event_name'] = "ChatMessageReceive"
+            chat_event = {
+                'id': self.tags['id'],
+                'channel': self.parameters[0][1:],
+                'broadcaster_id': self.tags['room-id'],
+                'content': self.parameters[1],
+                'emojis': {},
+                'user': {
+                    'id': self.tags['user-id'],
+                    'username': self.prefix[:self.prefix.index("!")],
+                    'display_name': self.tags['display-name'],
+                    # TODO: Badges
+                    'badges': None,
+                    'chat_color': self.tags['color'],
+                    'mod': int(self.tags['mod']),
+                    'returning_chatter': int(self.tags['returning-chatter']),
+                    'subscriber': int(self.tags['subscriber']),
+                    'turbo': int(self.tags['turbo']),
+                    'user_type': self.tags['user-type'],
+                    'broadcaster': self.parameters[0][1:] == self.prefix[:self.prefix.index("!")]
+                },
+                'first_message': int(self.tags.get('first_message', 0)),
+                'emote_only': int(self.tags.get('emote_only', 0))
+            }
+
+            if 'vip' in self.tags:
+                chat_event['user']['vip'] = int(self.tags['vip'])
+
+            to_deploy['event'] = chat_event
+
+            return to_deploy
