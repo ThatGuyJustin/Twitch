@@ -58,6 +58,7 @@ class IRCRawMessage(SlottedModel):
                 "badges": self.tags['badges'],
                 "color": self.tags['color'],
                 "display_name": self.tags['display-name'],
+                "username": self.tags['display-name'].lower(),
                 "emote_sets": self.tags['emote-sets'].split(","),
                 "user_type": self.tags['user-type']
             }
