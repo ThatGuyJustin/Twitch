@@ -1,13 +1,13 @@
 import copy
 
-from twitch.types.base import SlottedModel, Field, DictField
+from twitch.types.base import SlottedModel, Field, DictField, ListField
 
 
 class IRCRawMessage(SlottedModel):
     prefix = Field(str)
     tags = DictField(str, value_type=str)
     command = Field(str)
-    parameters = Field(str)
+    parameters = ListField(str)
     raw = Field(str)
 
     @classmethod

@@ -96,7 +96,7 @@ class IRCClient(LoggingClass):
             event = IRCRawMessage.from_raw(msg)
 
             if event.command == "PING":
-                self.send(f"PONG {' '.join(event.parameters)}")
+                self.send(f"PONG {event.parameters[0]}")
             else:
                 pass
 
