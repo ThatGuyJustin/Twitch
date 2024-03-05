@@ -73,8 +73,12 @@ class IRCClient(LoggingClass):
         return self.irc.send(data)
 
     def on_error(self, error):
+        if self.shutting_down:
+            return
         if isinstance(error, KeyboardInterrupt):
             self.shutting_down = True
+            # TODO: Maybe we dont close the ws?
+            self.irc.close()
         if isinstance(error, WebSocketTimeoutException):
             return self.log.error('Websocket connection has timed out. An upstream connection issue is likely present.')
         if not isinstance(error, WebSocketConnectionClosedException):
@@ -83,19 +87,17 @@ class IRCClient(LoggingClass):
     def shutdown(self):
         if self.irc:
             self.log.warning("Graceful shutdown initiated")
-            self.irc.shutting_down = True
+            self.shutting_down = True
             self.irc.close()
 
     def on_message(self, msg: IRCRawMessage):
         for _msg in msg.split("\r\n"):
             self._events.emit("IRC_WS_RAW", _msg)
-            e = IRCRawMessage.from_raw(msg)
+            event = IRCRawMessage.from_raw(msg)
 
-            if e.command == "PING":
-                self.send(f"PONG {' '.join(msg.parameters)}")
-                # return
+            if event.command == "PING":
+                self.send(f"PONG {' '.join(event.parameters)}")
             else:
-                # IF ITS NOT PING
                 pass
 
     def connect_and_run(self):

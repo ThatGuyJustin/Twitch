@@ -88,7 +88,7 @@ class Client(LoggingClass):
         Main Client "Eventloop" a blocking request to keep the process running
         """
         # TODO: Start things here maybe
-        # self.es.run()
+        self.es.run()
         self.irc.run()
 
         self.running.wait()

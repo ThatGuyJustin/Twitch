@@ -14,14 +14,14 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
     """
     def __init__(self, *args, **kwargs):
         LoggingClass.__init__(self)
-        websocket.setdefaulttimeout(25)
+        # Windows sucks > 25
+        # websocket.setdefaulttimeout(45)
         websocket.WebSocketApp.__init__(self, *args, **kwargs)
 
         self.emitter = Emitter()
 
         # Hack to get events to emit
         for var in self.__dict__.keys():
-            # TODO: May not work
             if not var.startswith('on_'):
                 continue
 
