@@ -280,7 +280,7 @@ class Bot(LoggingClass):
         content = msg.content if msg else content
 
         if require_mention and msg:
-            mention_direct = content.contains(f"@{self.user.display_name}")
+            mention_direct = f"@{self.user.display_name}" in content
 
             if mention_direct:
                 content = content.replace(f"@{self.user.display_name}", '', 1)
@@ -288,6 +288,7 @@ class Bot(LoggingClass):
                 return []
 
             content = content.lstrip()
+
         if len(prefixes):
             # Scan through the prefixes to find the first one that matches.
             # This may lead to unexpected results, but said unexpectedness
@@ -295,9 +296,7 @@ class Bot(LoggingClass):
             # that may occur would be if one prefix was `!` and one was `!a`.
             proceed = False
             for prefix in prefixes:
-                self.log.info(prefix)
                 if prefix and content.startswith(prefix):
-                    self.log.info("INNER IF")
                     content = content[len(prefix):]
                     proceed = True
                     break
@@ -323,7 +322,6 @@ class Bot(LoggingClass):
 
         return sorted(options, key=lambda obj: obj[0].group is None)
 
-    # TODO: Again, could probably update to fit twitch stuff
     def get_level(self, actor):
         level = CommandLevels.DEFAULT
 
@@ -332,11 +330,13 @@ class Bot(LoggingClass):
         else:
             if actor.id in self.config.levels:
                 level = self.config.levels[actor.id]
-
-            # if isinstance(actor, GuildMember):
-            #     for rid in actor.roles:
-            #         if rid in self.config.levels and self.config.levels[rid] > level:
-            #             level = self.config.levels[rid]
+            else:
+                # TODO: Add emoji artist, and maybe move this over to a "default level getter" method instead?
+                #   So this way levels aren't forced by default?
+                for _type in ["broadcaster", "mod", "vip", "subscriber"]:
+                    if getattr(actor, _type):
+                        level = getattr(CommandLevels, _type.upper())
+                        break
 
         return level
 
@@ -344,7 +344,7 @@ class Bot(LoggingClass):
         if not command.level:
             return True
 
-        level = self.get_level(event.user.id)
+        level = self.get_level(event.user)
 
         if level >= command.level:
             return True
@@ -353,13 +353,13 @@ class Bot(LoggingClass):
     # TODO: Update TO TWITCH
     def handle_command_event(self, event, content=None):
         """
-        Attempts to handle a newly created or edited command events in the context of
+        Attempts to handle a newly created command events in the context of
         command parsing/triggering. Calls all relevant commands the message triggers.
 
         Parameters
         ---------
         event : :class:'Event'
-            The newly created or updated event object to parse/handle.
+            The newly created event object to parse/handle.
         content : :class:'Message'
             Used for on_message_update below
 
@@ -371,19 +371,19 @@ class Bot(LoggingClass):
         if self.config.commands_enabled:
             commands = []
             custom_message_prefixes = None
-            # if event.content:
-            #     if self.config.commands_prefix_getter:
-            #         custom_message_prefixes = (self.config.commands_prefix_getter(event.content))
-            #
-            #     commands = self.get_commands_for_message(
-            #         self.config.commands_require_mention,
-            #         self.config.commands_mention_rules,
-            #         custom_message_prefixes or self.config.command_prefixes,
-            #         event.content,
-            #     )
+            if event.content:
+                if self.config.commands_prefix_getter:
+                    custom_message_prefixes = (self.config.commands_prefix_getter(event.content))
 
-            # elif content:
-            commands = self.get_commands_for_message(False, {}, self.config.command_prefixes, content=event.content)
+                commands = self.get_commands_for_message(
+                    self.config.commands_require_mention,
+                    {},
+                    custom_message_prefixes or self.config.command_prefixes,
+                    event,
+                )
+
+            elif content:
+                commands = self.get_commands_for_message(False, {}, self.config.command_prefixes, content=event.content)
 
             if not len(commands):
                 return False
@@ -401,7 +401,6 @@ class Bot(LoggingClass):
         self.user = event
 
     def on_message_create(self, event):
-        # Update to handle twitch
         if event.user.id == self.user.user_id:
             return
 

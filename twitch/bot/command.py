@@ -16,9 +16,11 @@ USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
 
 class CommandLevels:
     DEFAULT = 0
-    TRUSTED = 10
+    SUBSCRIBER = 5
+    ARTIST = 10
+    VIP = 30
     MOD = 50
-    STREAMER = 100
+    BROADCASTER = 100
 
 
 class PluginArgumentParser(argparse.ArgumentParser):

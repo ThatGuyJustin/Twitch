@@ -36,3 +36,11 @@ class ChatMessage(SlottedModel):
     user = Field(ChatUser)
     first_message = Field(bool)
     emote_only = Field(bool)
+
+    def reply(self, content):
+        # @reply-parent-msg-id=885196de-cb67-427a-baa8-82f9b0fcd05f PRIVMSG #lovingt3s :absolutely!
+        self.client.irc.send(f"@reply-parent-msg-id={self.id} PRIVMSG #{self.channel} :{content}")
+
+    def send_message(self, content):
+        self.client.irc.send(f"PRIVMSG #{self.channel} :{content}")
+

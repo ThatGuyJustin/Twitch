@@ -87,14 +87,12 @@ class IRCRawMessage(SlottedModel):
                     'subscriber': int(self.tags['subscriber']),
                     'turbo': int(self.tags['turbo']),
                     'user_type': self.tags['user-type'],
-                    'broadcaster': self.parameters[0][1:] == self.prefix[:self.prefix.index("!")]
+                    'broadcaster': self.parameters[0][1:] == self.prefix[:self.prefix.index("!")],
+                    'vip': int(self.tags.get('vip', 0))
                 },
                 'first_message': int(self.tags.get('first_message', 0)),
-                'emote_only': int(self.tags.get('emote_only', 0))
+                'emote_only': int(self.tags.get('emote_only', 0)),
             }
-
-            if 'vip' in self.tags:
-                chat_event['user']['vip'] = int(self.tags['vip'])
 
             to_deploy['event'] = chat_event
 
