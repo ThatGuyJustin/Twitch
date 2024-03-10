@@ -11,14 +11,17 @@ ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
 ARGS_UNGROUPED_REGEX = '(?: (?:\n|.)*$|$)'
 SPLIT_SPACES_NO_QUOTE = re.compile(r'["|\']([^"\']+)["|\']|(\S+)')
 
+# TODO: REMOVE
 USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
 
 
 class CommandLevels:
     DEFAULT = 0
-    TRUSTED = 10
+    SUBSCRIBER = 5
+    ARTIST = 10
+    VIP = 30
     MOD = 50
-    STREAMER = 100
+    BROADCASTER = 100
 
 
 class PluginArgumentParser(argparse.ArgumentParser):
@@ -46,14 +49,14 @@ class CommandEvent:
         Arguments passed to the command.
     """
 
-    def __init__(self, command, event, match):
+    def __init__(self, command, event, match, client):
         self.command = command
         self._event = event
-        self.msg = event.message
-        self.interaction = event.interaction
+        self.msg = event
         self.match = match
         self.name = self.match.group(1).strip()
         self.args = []
+        self.client = client
 
         if self.match.group(2):
             self.args = [i for i in self.match.group(2).strip().split(' ') if i]
@@ -75,55 +78,16 @@ class CommandEvent:
 
         return src
 
-    @simple_cached_property
-    def member(self):
-        """
-        Guild member (if relevant) for the user that created the CommandEvent.
-        """
-        if self.interaction:
-            return self.interaction.member
-        return self._event.member
-
-    @simple_cached_property
-    def channel(self):
-        """
-        Channel the CommandEvent was created in.
-        """
-        return self._event.channel
-
-    @simple_cached_property
-    def thread(self):
-        """
-        Thread the CommandEvent was created in.
-        """
-        return self._event.channel
-
-    @simple_cached_property
-    def guild(self):
-        """
-        Guild (if relevant) the CommandEvent was created in.
-        """
-        return self._event.guild
-
-    @simple_cached_property
-    def author(self):
-        """
-        Author of the CommandEvent.
-        """
-        if self.interaction:
-            if self._event.guild:
-                return self.interaction.member.user
-            return self.interaction.user
-        return self.msg.author
-
-    def reply(self, *args, **kwargs):
+    def reply(self, content):
         """
         A convenient method to call the respective events' reply methods.
         """
-        if self.msg:
-            return self.msg.reply(*args, **kwargs)
-        elif self.interaction:
-            return self.interaction.reply(*args, **kwargs)
+        # @reply-parent-msg-id=885196de-cb67-427a-baa8-82f9b0fcd05f PRIVMSG #lovingt3s :absolutely!
+        self.client.irc.send(f"@reply-parent-msg-id={self._event.id} PRIVMSG #{self._event.channel} :{content}")
+
+    def send_message(self, content):
+        self.client.irc.send(f"PRIVMSG #{self._event.channel} :{content}")
+
 
 
 class CommandError(Exception):

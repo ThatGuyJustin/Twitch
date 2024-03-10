@@ -73,9 +73,13 @@ class EventSubClient(LoggingClass):
         self.connect_and_run()
 
     def on_error(self, error):
+        if self.shutting_down:
+            return
         print(error)
         if isinstance(error, KeyboardInterrupt):
             self.shutting_down = True
+            # TODO: Maybe we dont close the ws?
+            self.ws.close()
         if isinstance(error, WebSocketTimeoutException):
             return self.log.error('Websocket connection has timed out. An upstream connection issue is likely present.')
         if not isinstance(error, WebSocketConnectionClosedException):
@@ -148,7 +152,7 @@ class EventSubClient(LoggingClass):
     def shutdown(self):
         if self.ws:
             self.log.warning("Graceful shutdown initiated")
-            self.ws.shutting_down = True
+            self.shutting_down = True
             self.ws.close()
 
     def connect_and_run(self):

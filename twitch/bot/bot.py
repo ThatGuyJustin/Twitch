@@ -1,4 +1,5 @@
 from twitch.bot.command import CommandLevels, CommandEvent
+from twitch.bot.plugin import find_loadable_plugins
 from twitch.bot.storage import Storage
 from twitch.util.config import Config
 from twitch.util.enum import get_enum_value_by_name
@@ -102,12 +103,12 @@ class BotConfig(Config):
 
 
 class Bot(LoggingClass):
+
+    user = None
+
     def __init__(self, client, config=None):
         self.client = client
         self.config = config or BotConfig()
-
-        # Shard manager
-        self.shards = None
 
         # The context carries information about events in a threadlocal storage
         self.ctx = ThreadLocal()
@@ -137,7 +138,7 @@ class Bot(LoggingClass):
         # Only bind event listeners if we're going to parse commands
         if self.config.commands_enabled and (self.config.commands_require_mention or len(self.config.command_prefixes)):
             # TODO: Map with IRC Message get
-            self.client.events.on('MessageCreate', self.on_message_create)
+            self.client.events.on('ChatMessageReceive', self.on_message_create)
 
         # If we have a level getter, and it is a string, try to load it
         if isinstance(self.config.commands_level_getter, str):
@@ -157,12 +158,15 @@ class Bot(LoggingClass):
 
         # Convert our configured mapping of entities to levels into something
         #  we can actually use. This ensures IDs are converted properly, and maps
-        #  any level names (e.g. `role_id: admin`) map to their numerical values.
+        #  any level names (e.g. `user_id: admin`) map to their numerical values.
         for entity_id, level in tuple(self.config.levels.items()):
             del self.config.levels[entity_id]
             entity_id = int(entity_id) if str(entity_id).isdigit() else entity_id
             level = int(level) if str(level).isdigit() else get_enum_value_by_name(CommandLevels, level)
             self.config.levels[entity_id] = level
+
+        # Bind the auth IRC event to map the logged-in user for reference.
+        self.client.events.on("ChatReady", self.on_irc_auth)
 
     # TODO: Reimpl?
     # @classmethod
@@ -276,37 +280,15 @@ class Bot(LoggingClass):
         content = msg.content if msg else content
 
         if require_mention and msg:
-            mention_direct = msg.is_mentioned(self.client.state.me)
-            mention_everyone = msg.mention_everyone
+            mention_direct = f"@{self.user.display_name}" in content
 
-            mention_roles = []
-            if msg.guild:
-                mention_roles = tuple(filter(lambda r: msg.is_mentioned(r),
-                                             msg.guild.get_member(self.client.state.me).roles))
-
-            if any((
-                    mention_rules.get('user', True) and mention_direct,
-                    mention_rules.get('everyone', False) and mention_everyone,
-                    mention_rules.get('role', False) and any(mention_roles),
-                    msg.channel.is_dm,
-            )):
-                if mention_direct:
-                    if msg.guild:
-                        member = msg.guild.get_member(self.client.state.me)
-                        if member:
-                            # Filter both the normal and nick mentions
-                            content = content.replace(member.user.mention, '', 1)
-                    else:
-                        content = content.replace(self.client.state.me.mention, '', 1)
-                elif mention_everyone:
-                    content = content.replace('@everyone', '', 1)
-                elif mention_roles:
-                    for role in mention_roles:
-                        content = content.replace('<@{}>'.format(role), '', 1)
-                else:
-                    return []
+            if mention_direct:
+                content = content.replace(f"@{self.user.display_name}", '', 1)
+            else:
+                return []
 
             content = content.lstrip()
+
         if len(prefixes):
             # Scan through the prefixes to find the first one that matches.
             # This may lead to unexpected results, but said unexpectedness
@@ -340,7 +322,6 @@ class Bot(LoggingClass):
 
         return sorted(options, key=lambda obj: obj[0].group is None)
 
-    # TODO: Again, could probably update to fit twitch stuff
     def get_level(self, actor):
         level = CommandLevels.DEFAULT
 
@@ -349,11 +330,13 @@ class Bot(LoggingClass):
         else:
             if actor.id in self.config.levels:
                 level = self.config.levels[actor.id]
-
-            # if isinstance(actor, GuildMember):
-            #     for rid in actor.roles:
-            #         if rid in self.config.levels and self.config.levels[rid] > level:
-            #             level = self.config.levels[rid]
+            else:
+                # TODO: Add emoji artist, and maybe move this over to a "default level getter" method instead?
+                #   So this way levels aren't forced by default?
+                for _type in ["broadcaster", "mod", "vip", "subscriber"]:
+                    if getattr(actor, _type):
+                        level = getattr(CommandLevels, _type.upper())
+                        break
 
         return level
 
@@ -361,10 +344,7 @@ class Bot(LoggingClass):
         if not command.level:
             return True
 
-        if event.message:
-            level = self.get_level(event.author if not event.guild else event.member)
-        elif event.interaction:
-            level = self.get_level(event.interaction.user if not event.interaction.member else event.interaction.member)
+        level = self.get_level(event.user)
 
         if level >= command.level:
             return True
@@ -373,13 +353,13 @@ class Bot(LoggingClass):
     # TODO: Update TO TWITCH
     def handle_command_event(self, event, content=None):
         """
-        Attempts to handle a newly created or edited command events in the context of
+        Attempts to handle a newly created command events in the context of
         command parsing/triggering. Calls all relevant commands the message triggers.
 
         Parameters
         ---------
         event : :class:'Event'
-            The newly created or updated event object to parse/handle.
+            The newly created event object to parse/handle.
         content : :class:'Message'
             Used for on_message_update below
 
@@ -391,19 +371,19 @@ class Bot(LoggingClass):
         if self.config.commands_enabled:
             commands = []
             custom_message_prefixes = None
-            if event.message:
+            if event.content:
                 if self.config.commands_prefix_getter:
-                    custom_message_prefixes = (self.config.commands_prefix_getter(event.message))
+                    custom_message_prefixes = (self.config.commands_prefix_getter(event.content))
 
                 commands = self.get_commands_for_message(
                     self.config.commands_require_mention,
-                    self.config.commands_mention_rules,
+                    {},
                     custom_message_prefixes or self.config.command_prefixes,
-                    event.message,
+                    event,
                 )
 
             elif content:
-                commands = self.get_commands_for_message(False, {}, ['/'], content=content)
+                commands = self.get_commands_for_message(False, {}, self.config.command_prefixes, content=event.content)
 
             if not len(commands):
                 return False
@@ -412,39 +392,21 @@ class Bot(LoggingClass):
                 if not self.check_command_permissions(command, event):
                     continue
 
-                if command.plugin.execute(CommandEvent(command, event, match)):
+                if command.plugin.execute(CommandEvent(command, event, match, self.client)):
                     return True
             return False
         return
 
+    def on_irc_auth(self, event):
+        self.user = event
+
     def on_message_create(self, event):
-        if event.author.id == self.client.state.me.id:
+        if event.user.id == self.user.user_id:
             return
 
         result = self.handle_command_event(event)
 
-        if self.config.commands_allow_edit:
-            self.last_message_cache[event.message.channel_id] = (event.message, result)
-
-    def on_message_update(self, event):
-        if not self.config.commands_allow_edit:
-            return
-
-        # Ignore messages that do not have content, these can happen when only
-        #  some message fields are updated.
-        if not event.message.content:
-            return
-
-        obj = self.last_message_cache.get(event.message.channel_id)
-        if not obj:
-            return
-
-        msg, triggered = obj
-        if msg.id == event.message.id and not triggered:
-            msg.inplace_update(event.message)
-            triggered = self.handle_message(msg)
-
-            self.last_message_cache[msg.channel_id] = (msg, triggered)
+        self.last_message_cache[event.broadcaster_id] = (event, result)
 
     def add_plugin(self, inst, config=None, ctx=None):
         """
