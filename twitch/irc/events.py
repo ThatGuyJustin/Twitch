@@ -1,5 +1,5 @@
 # Mapping of twitch event name to our event classes
-from twitch.types.base import ModelMeta, Model, Field, SlottedModel, text, ListField
+from twitch.types.base import ModelMeta, Model, Field, SlottedModel, text, ListField, datetime
 from twitch.types.chat import ChatMessage
 from twitch.util.metaclass import with_metaclass
 
@@ -135,17 +135,73 @@ class ChatMessageReceive(IRCChatEvent):
     pass
 
 
+# TODO: Clean up timestamp
+class ChatMessageDelete(IRCChatEvent):
+    channel = Field(text)
+    channel_id = Field(int)
+    message = Field(text)
+    message_id = Field(text)
+    user = Field(text)
+    tmi_timestamp = Field(text)
+
+
+# TODO: Fix broken event
+class ChatCleared(IRCChatEvent):
+    channel = Field(text)
+    channel_id = Field(int)
+    user = Field(text, create=False)
+    user_id = Field(int, create=False)
+    ban_duration = Field(int, create=False)
+    tmi_timestamp = Field(text, create=False)
+
+
+class ChatNotice(IRCChatEvent):
+    id = Field(text, create=False)
+    channel = Field(text)
+    message = Field(text)
+
+
 # TODO: Map after testing
 class ChatRoomUpdate(IRCChatEvent):
-    pass
+    emote_only = Field(bool, create=False)
+    followers_only = Field(int, create=False)
+    unique_only = Field(bool, create=False)
+    channel = Field(text, create=False)
+    channel_id = Field(int, create=False)
+    slowmode = Field(int, create=False)
+    sub_only = Field(bool, create=False)
+
+
+# TODO: Additional Notice types, like raid and sub D:
+class ChatUserNotice(IRCChatEvent):
+    id = Field(text),
+    msg_id = Field(text, create=False)
+    system_msg = Field(text, create=False)
+    tmi_timestamp = Field(text, create=False)
+    channel = Field(text)
+    channel_id = Field(int)
+    message = Field(text)
+    badge_info = Field(text, create=False)
+    badges = Field(text, create=False)
+    color = Field(text, create=False)
+    emotes = Field(text, create=False)
+    username = Field(text)
+    user_id = Field(int)
+    user_type = Field(text, default="normal")
+    display_name = Field(text, create=False)
+    mod = Field(bool, create=False)
+    subscriber = Field(bool, create=False)
+    turbo = Field(bool, create=False)
+
+
+class ChatRoomPart(IRCChatEvent):
+    channel = Field(text)
+    user = Field(text)
 
 
 class ChatRoomJoin(IRCChatEvent):
-    pass
-
-
-class ChatRoomLeave(IRCChatEvent):
-    pass
+    channel = Field(text)
+    user = Field(text)
 
 
 # TODO: Map?
@@ -154,7 +210,16 @@ class ChatReconnect(IRCChatEvent):
 
 
 class ChatWhisper(IRCChatEvent):
-    pass
+    id = Field(text)
+    thread_id = Field(text)
+    from_user = Field(text)
+    to_user = Field(text)
+    badges = Field(text, create=False)
+    color = Field(text, create=False)
+    display_name = Field(text, create=False)
+    emotes = Field(text, create=False)
+    user_id = Field(int, create=False)
+    user_type = Field(text, create=False)
 
 
 class ChatUserState(IRCChatEvent):

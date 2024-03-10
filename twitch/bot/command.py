@@ -11,6 +11,7 @@ ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
 ARGS_UNGROUPED_REGEX = '(?: (?:\n|.)*$|$)'
 SPLIT_SPACES_NO_QUOTE = re.compile(r'["|\']([^"\']+)["|\']|(\S+)')
 
+# TODO: REMOVE
 USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
 
 

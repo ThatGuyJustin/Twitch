@@ -70,7 +70,10 @@ class IRCClient(LoggingClass):
         # self._events.emit("CHAT_READY")
 
     def send(self, data):
-        self.log.debug(f"Sending message: {data}")
+        if data.startswith("PASS"):
+            self.log.debug(f"Sending message: PASS *****************")
+        else:
+            self.log.debug(f"Sending message: {data}")
         return self.irc.send(data)
 
     def on_error(self, error):
@@ -91,6 +94,7 @@ class IRCClient(LoggingClass):
             self.shutting_down = True
             self.irc.close()
 
+    # TODO: Pool initial joins together, potentially squash entire ChannelJoin Object into one when bot joins.
     def on_message(self, msg: IRCRawMessage):
         for _msg in msg.split("\r\n"):
             self._events.emit("IRC_WS_RAW", _msg)
@@ -100,10 +104,14 @@ class IRCClient(LoggingClass):
 
             if event.command == "PING":
                 self.send(f"PONG {event.parameters[0]}")
-            elif event.command in ["PRIVMSG", "GLOBALUSERSTATE"]:
+            elif (event.command in
+                  ["PRIVMSG", "GLOBALUSERSTATE", "NOTICE", "ROOMSTATE", "USERNOTICE", "WHISPER", "CLEARMSG", "CLEARCHAT", "PART", "JOIN"]):
+                # self.log.debug(event.to_json())
                 obj = IRCChatEvent.from_dispatch(self._client, event.to_json())
                 self.log.debug('EventSubClient.handle_dispatch %s', obj.__class__.__name__)
                 self._events.emit(obj.__class__.__name__, obj)
+            else:
+                self.log.debug(f"Received unmapped event: {_msg}")
 
     def connect_and_run(self):
         self.log.info('Opening irc connection to URL `%s`', self._irc_url)
