@@ -5,21 +5,37 @@ import gevent.event
 
 from twitch.irc.events import IRCChatEvent
 from twitch.types.irc import IRCRawMessage
-from twitch.util.leakybucket import LeakyBucket
+from twitch.util.config import Config
 from twitch.util.logging import LoggingClass
 from twitch.util.websocket import Websocket
 from websocket import WebSocketTimeoutException, WebSocketConnectionClosedException
 
 
+class IRCConfig(Config):
+    # """
+    # Configuration for the `Client`.
+    #
+    # Attributes
+    # ----------
+    # app_token : str
+    #     The token for the twitch development app
+    # app_secret : str
+    #     The secret for the twitch development app
+    # """
+
+    token = ''
+    nick = ''
+    capabilities = ['membership', 'tags', 'commands']
+    max_reconnects = 25 # TODO: tbm
+    irc_endpoint = 'wss://irc-ws.chat.twitch.tv'
+    channels_join = [] # TODO: tbm
+
+
 class IRCClient(LoggingClass):
-    def __init__(self, client):
+    def __init__(self, client, config=None):
         super(IRCClient, self).__init__()
 
-        # TODO: CONFIG
-        self.max_reconnects = 25
-        self.remember_past_events = 15
-        self.capabilities = ['membership', 'tags', 'commands']
-        # TODO: CONFIG END
+        self.config = config or IRCConfig()
 
         self._events = client.events
 
@@ -30,11 +46,6 @@ class IRCClient(LoggingClass):
         self.reconnects = 0
 
         self._client = client
-        self._token = None
-        self._nick = None
-        self._irc_url = "wss://irc-ws.chat.twitch.tv"
-        # self._irc_status = "STARTING"
-        self._last_events = LeakyBucket(self.remember_past_events)
 
     def on_close(self, code=None, reason=None):
         self._events.emit("CHAT_WS_CLOSED")
@@ -62,11 +73,11 @@ class IRCClient(LoggingClass):
         # self._irc_status = "OPENED"
         self.log.info('WS Opened')
 
-        for x in self.capabilities:
+        for x in self.config.capabilities:
             self.send(f"CAP REQ :twitch.tv/{x}")
 
-        self.send(f"PASS oauth:{self._token}")
-        self.send(f"NICK {self._nick}")
+        self.send(f"PASS oauth:{self.config.token}")
+        self.send(f"NICK {self.config.nick}")
         # self._events.emit("CHAT_READY")
 
     def send(self, data):
@@ -105,7 +116,8 @@ class IRCClient(LoggingClass):
             if event.command == "PING":
                 self.send(f"PONG {event.parameters[0]}")
             elif (event.command in
-                  ["PRIVMSG", "GLOBALUSERSTATE", "NOTICE", "ROOMSTATE", "USERNOTICE", "WHISPER", "CLEARMSG", "CLEARCHAT", "PART", "JOIN"]):
+                  ["PRIVMSG", "GLOBALUSERSTATE", "NOTICE", "ROOMSTATE", "USERNOTICE", "WHISPER", "CLEARMSG",
+                   "CLEARCHAT", "PART", "JOIN"]):
                 # self.log.debug(event.to_json())
                 obj = IRCChatEvent.from_dispatch(self._client, event.to_json())
                 self.log.debug('EventSubClient.handle_dispatch %s', obj.__class__.__name__)
@@ -114,8 +126,8 @@ class IRCClient(LoggingClass):
                 self.log.debug(f"Received unmapped event: {_msg}")
 
     def connect_and_run(self):
-        self.log.info('Opening irc connection to URL `%s`', self._irc_url)
-        self.irc = Websocket(self._irc_url)
+        self.log.info('Opening irc connection to URL `%s`', self.config.irc_endpoint)
+        self.irc = Websocket(self.config.irc_endpoint)
         self.irc.emitter.on('on_open', self.on_open)
         self.irc.emitter.on('on_error', self.on_error)
         self.irc.emitter.on('on_close', self.on_close)
