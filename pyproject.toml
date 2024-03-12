@@ -2,7 +2,7 @@
 name = "TwitchPy"
 version = "1.0.0"
 description = "A twitch API wrapper that uses a combination of Gevent and HTTP requests"
-authors = ["Justin <justin@aperturebot.science>", "Nadie <nadie@nadie.dev>"]
+authors = ["Justin <justin@aperturebot.science>", "Nadie <iam@nadie.dev>"]
 readme = "README.md"
 packages = [{include = "twitch"}]
 repository = "https://github.com/ThatGuyJustin/twitch"
@@ -26,6 +26,7 @@ gevent = "^24.2.1"
 requests = "^2.31.0"
 websocket-client = "^1.6.4"
 flask = "^3.0.0"
+requests-oauthlib = "^1.4.0"
 
 regex = { version = "^2022.10.31", optional = true }
 pylibyaml = { version = "^0.1.0", optional = true }
