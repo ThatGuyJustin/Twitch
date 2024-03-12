@@ -7,6 +7,7 @@ import gevent
 from websocket import WebSocketTimeoutException, WebSocketConnectionClosedException
 
 from twitch.eventsub.events import EventSubEvent
+from twitch.util.config import Config
 from twitch.util.leakybucket import LeakyBucket, LeakyBucketException
 from twitch.util.logging import LoggingClass
 from twitch.util.websocket import Websocket
@@ -17,14 +18,27 @@ except ImportError:
     import json
 
 
+class EventSubConfig(Config):
+    # """
+    # Configuration for the `EventSubCleint`.
+    #
+    # Attributes
+    # ----------
+    # app_token : str
+    #     The token for the twitch development app
+    # app_secret : str
+    #     The secret for the twitch development app
+    # """
+    max_reconnects = 25
+    remember_past_events = 15
+    endpoint_url = "wss://eventsub.wss.twitch.tv/ws"
+
+
 class EventSubClient(LoggingClass):
-    def __init__(self, client, gateway_url=None):
+    def __init__(self, client, config: EventSubConfig = None):
         super(EventSubClient, self).__init__()
 
-        # TODO: CONFIG
-        self.max_reconnects = 25
-        self.remember_past_events = 15
-        # TODO: CONFIG END
+        self.config = config or EventSubConfig()
 
         self._events = client.events
 
@@ -35,13 +49,13 @@ class EventSubClient(LoggingClass):
         self.shutting_down = False
         self.reconnects = 0
 
+        self._gateway_url = self.config.endpoint_url
         self._client = client
-        self._gateway_url = "wss://eventsub.wss.twitch.tv/ws" if not gateway_url else gateway_url
         self._keepalive_timeout_seconds = None
         self._heartbeat_task = None
         self._last_event_sent = None
         self._ws_status = "STARTING"
-        self._last_events = LeakyBucket(self.remember_past_events)
+        self._last_events = LeakyBucket(self.config.remember_past_events)
 
     def on_open(self):
         self._ws_status = "OPENED"
@@ -64,10 +78,11 @@ class EventSubClient(LoggingClass):
         if self._ws_status != "RECONNECT_REQUEST":
             self.reconnects += 1
             self._last_events.clean()
-            self.log.info('WS Closed:{}{} ({})'.format(' [{}]'.format(code) if code else '', ' {}'.format(reason) if reason else '', self.reconnects))
+            self.log.info('WS Closed:{}{} ({})'.format(' [{}]'.format(code) if code else '',
+                                                       ' {}'.format(reason) if reason else '', self.reconnects))
 
-            if self.max_reconnects and self.reconnects > self.max_reconnects:
-                raise Exception('Failed to reconnect after {} attempts, giving up'.format(self.max_reconnects))
+            if self.config.max_reconnects and self.reconnects > self.config.max_reconnects:
+                raise Exception('Failed to reconnect after {} attempts, giving up'.format(self.config.max_reconnects))
 
         # TODO handle logic on non resumes/reconnects
         self.connect_and_run()
@@ -142,8 +157,10 @@ class EventSubClient(LoggingClass):
     def heartbeat_task(self):
         self.log.debug("Twitch EventSub Heartbeat Listener started")
         while True:
-            if (self._keepalive_timeout_seconds is not None) and (time.time() - self._last_event_sent) > self._keepalive_timeout_seconds:
-                self.log.warning(f'Twitch failed to send an event in {self._keepalive_timeout_seconds}s, Forcing a reconnect') # noqa
+            if (self._keepalive_timeout_seconds is not None) and (
+                    time.time() - self._last_event_sent) > self._keepalive_timeout_seconds:
+                self.log.warning(
+                    f'Twitch failed to send an event in {self._keepalive_timeout_seconds}s, Forcing a reconnect')  # noqa
                 # maybe need code?
                 self.ws.close()
             # Dynamicly set mayhaps

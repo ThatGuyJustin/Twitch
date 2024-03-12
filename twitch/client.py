@@ -27,7 +27,6 @@ class ClientConfig(Config):
 
     app_token = ''
     app_secret = ''
-    redirect_uri = "http://localhost:8080/auth/callback"
 
     log_level = 'info'
     log_unknown_events = False
@@ -51,12 +50,16 @@ class Client(LoggingClass):
         The runtime configuration for this client.
     events : `Emitter`
         An emitter which emits EventSub events.
-    packets : `Emitter`
-        An emitter which emits EventSub packets.
     api : `APIClient`
         The API client.
     es : `EventSubClient`
         The EventSub client.
+    irc : `IRCClient`
+        The IRC client.
+    flask : `FlaskServer`
+        The Flask Server.
+    cli : `CLI`
+        The CLI.
     """
 
     def __init__(self, config):
@@ -65,22 +68,25 @@ class Client(LoggingClass):
 
         self.events = Emitter()
 
-        # TODO: IRC CLIENT
-        # self.irc = IRCClient(self.config)
         self.api = APIClient()
-        # TODO: API CLIENT
-        self.irc = IRCClient(self)
-        self.es = EventSubClient(self)
 
-        # TODO: Make methods to dynamically start a flask server or not :)
+        self.es = None
+        self.irc = None
+        self.flask = None
+        self.cli = None
+
         self.running = gevent.event.Event()
 
     def shutdown(self):
         self.log.info("Graceful shutdown initiated")
 
-        # TODO: Make shutdown methods for each mod
-        self.es.shutdown()
-        self.irc.shutdown()
+        if self.es:
+            self.es.shutdown()
+        if self.irc:
+            self.irc.shutdown()
+        if self.flask:
+            self.flask.shutdown()
+
         self.running.set()
 
     def start(self):
@@ -88,8 +94,13 @@ class Client(LoggingClass):
         Main Client "Eventloop" a blocking request to keep the process running
         """
         # TODO: Start things here maybe
-        self.es.run()
-        self.irc.run()
+
+        if self.es:
+            self.es.run()
+        if self.irc:
+            self.irc.run()
+        if self.flask:
+            self.flask.serve()
 
         self.running.wait()
 
