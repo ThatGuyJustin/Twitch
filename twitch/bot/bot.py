@@ -12,11 +12,8 @@ try:
 except ImportError:
     import re
 import os
-import gevent
 import inspect
 import importlib
-
-from gevent.pywsgi import WSGIServer
 
 
 class BotConfig(Config):
@@ -62,15 +59,6 @@ class BotConfig(Config):
         The serialization format plugin configuration files are in.
     plugin_config_dir : str
         The directory plugin configuration is located within.
-    http_enabled : bool
-        Whether to enable the built-in Flask server which allows plugins to handle
-        and route HTTP requests.
-    http_logging : bool
-        Whether to enable the built-in wsgi logging mechanism.
-    http_host : str
-        The host string for the HTTP Flask server (if enabled).
-    http_port : int
-        The port for the HTTP Flask server (if enabled).
     """
     deprecated = {'commands_prefix': 'command_prefixes'}
 
@@ -96,14 +84,8 @@ class BotConfig(Config):
     storage_serializer = 'json'
     storage_path = 'storage.json'
 
-    http_enabled = False
-    http_logging = True
-    http_host = '0.0.0.0'
-    http_port = 7575
-
 
 class Bot(LoggingClass):
-
     user = None
 
     def __init__(self, client, config=None):
@@ -117,20 +99,6 @@ class Bot(LoggingClass):
         self.storage = None
         if self.config.storage_enabled:
             self.storage = Storage(self.ctx, self.config.from_prefix('storage'))
-
-        # Setup HTTP server (Flask app) if enabled
-        self.http = None
-        if self.config.http_enabled and int(self.client.config.shard_id) == 0:
-            try:
-                from flask import Flask
-            except ImportError:
-                self.log.warning('Failed to enable HTTP server, Flask is not installed')
-
-            self.log.info(f'Starting HTTP server bound to {self.config.http_host}:{self.config.http_port}')
-            self.http = Flask('twitch')
-            self.http_server = WSGIServer((self.config.http_host, self.config.http_port), self.http,
-                                          log=self.log if self.config.http_logging else None)
-            self.http_server_greenlet = gevent.spawn(self.http_server.serve_forever)
 
         self.plugins = {}
         self.group_abbrev = {}
@@ -167,27 +135,6 @@ class Bot(LoggingClass):
 
         # Bind the auth IRC event to map the logged-in user for reference.
         self.client.events.on("ChatReady", self.on_irc_auth)
-
-    # TODO: Reimpl?
-    # @classmethod
-    # def from_cli(cls, *plugins):
-    #     """
-    #     Creates a new instance of the bot using the utilities inside the
-    #     :mod:`disco.cli` module. Allows passing in a set of uninitialized
-    #     plugin classes to load.
-    #
-    #     Parameters
-    #     ---------
-    #     plugins : Optional[list(:class:`disco.bot.plugin.Plugin`)]
-    #         Any plugins to load after creating the new bot instance.
-    #     """
-    #     from twitch.cli import twitch_main
-    #     inst = cls(twitch_main())
-    #
-    #     for plugin in plugins:
-    #         inst.add_plugin(plugin)
-    #
-    #     return inst
 
     @property
     def commands(self):

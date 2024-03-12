@@ -70,16 +70,6 @@ class Storage:
             f.write(Serializer.dumps(self._serializer, self._data))
             f.close()
 
-    # TODO: Remove
-    # def guild(self, key):
-    #     return ContextAwareProxy(
-    #         lambda: self['_g{}:{}'.format(self._ctx['guild'].id, key)],
-    #     )
-    #
-    # def channel(self, key):
-    #     return ContextAwareProxy(
-    #         lambda: self['_c{}:{}'.format(self._ctx['channel'].id, key)],
-    #     )
 
     def plugin(self, key):
         return ContextAwareProxy(

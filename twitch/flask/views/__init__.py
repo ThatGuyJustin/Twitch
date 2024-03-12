@@ -1,0 +1,1 @@
+from twitch.flask.views.auth import Auth

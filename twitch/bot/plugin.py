@@ -288,7 +288,11 @@ class Plugin(LoggingClass, PluginDeco):
                         **meta['kwargs'])
         elif meta['type'] == 'http.add_route':
             meta['kwargs']['view_func'] = member
-            self.bot.http.add_url_rule(*meta['args'], **meta['kwargs'])
+            if self.bot.client.flask:
+                self.bot.client.flask.app.add_url_rule(*meta['args'], **meta['kwargs'])
+            else:
+                # TODO: Maybe not log?
+                self.log.warning(f"Flask not configured, not adding url rule")
         else:
             raise Exception('unhandled meta type {}'.format(meta))
 
