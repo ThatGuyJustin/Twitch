@@ -96,7 +96,7 @@ class APIClient(LoggingClass):
             "refresh_token": refresh_token
         })
 
-        if r.status_code is 401:
+        if r.status_code == 401:
             return None
         else:
             return r.json()
@@ -135,7 +135,7 @@ class APIClient(LoggingClass):
 
                 if r.status_code in [400, 401, 403, 409, 429]:
                     responses['fails'].append(r.json())
-                elif r.status_code is 202:
+                elif r.status_code == 202:
                     responses['success'].append(r.json())
 
             return responses

@@ -443,7 +443,10 @@ class Bot(LoggingClass):
         plugins = find_loadable_plugins(mod)
         for plugin in plugins:
             loaded = True
-            self.add_plugin(plugin, config)
+            try:
+                self.add_plugin(plugin, config)
+            except Exception as e:
+                self.log.error(f'Cannot Load Plugin module @ "{path}":', exc_info=e)
 
         if not loaded:
             raise Exception(f'Could not find any plugins to load within module {path}')
