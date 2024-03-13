@@ -180,7 +180,7 @@ class BasePluginDeco:
         Adds an HTTP route.
         """
         return cls.add_meta_deco({
-            'type': 'http.add_route',
+            'type': 'flaskserver.add_route',
             'args': args,
             'kwargs': kwargs,
         })
@@ -286,7 +286,7 @@ class Plugin(LoggingClass, PluginDeco):
                     getattr(command.parser, meta['type'].split('.', 1)[-1])(
                         *meta['args'],
                         **meta['kwargs'])
-        elif meta['type'] == 'http.add_route':
+        elif meta['type'] == 'flaskserver.add_route':
             meta['kwargs']['view_func'] = member
             if self.bot.client.flask:
                 self.bot.client.flask.app.add_url_rule(*meta['args'], **meta['kwargs'])

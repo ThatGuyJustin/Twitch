@@ -242,6 +242,7 @@ class Routes:
 
     OAUTH_VALIDATE_TOKEN = (HTTPMethod.GET, OAUTH_BASE_URL + "/oauth2/validate")
     OAUTH_POST_TOKEN = (HTTPMethod.POST, OAUTH_BASE_URL + "/oauth2/token")
+    OAUTH_AUTHORIZE_TOKEN = (HTTPMethod.GET, OAUTH_BASE_URL + "/oauth2/authorize")
 
 
 class APIResponse:

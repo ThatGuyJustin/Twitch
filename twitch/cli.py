@@ -13,7 +13,7 @@ from twitch.client import Client, ClientConfig
 from twitch.bot import Bot, BotConfig
 from twitch.eventsub.client import EventSubClient, EventSubConfig
 from twitch.irc.client import IRCConfig, IRCClient
-from twitch.flask.server import FlaskServer, FlaskConfig
+from twitch.flaskserver.server import FlaskServer, FlaskConfig
 
 parser = argparse.ArgumentParser()
 
@@ -67,7 +67,7 @@ class CLI:
         if self.args.run_irc or hasattr(self._config, 'irc'):
             self._client.irc = IRCClient(self._client, IRCConfig(self._config.irc) if hasattr(self._config, 'irc') else IRCConfig())
 
-
+        # Always Last, to allow all clients to init/connect correctly.
         if self.args.run_bot or hasattr(self._config, 'bot'):
             bot_config = BotConfig(self._config.bot) if hasattr(self._config, 'bot') else BotConfig()
             if not hasattr(bot_config, 'plugins'):

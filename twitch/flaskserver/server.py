@@ -1,11 +1,10 @@
-import copy
 import importlib
 
 import gevent
 
+from twitch.flaskserver.internaloauth import InternalOauth
 from twitch.util.config import Config
 from twitch.util.logging import LoggingClass
-from twitch.flask.views import Auth
 
 
 class FlaskConfig(Config):
@@ -51,7 +50,7 @@ class FlaskServer(LoggingClass):
 
         if not temp:
             if self.config.event_sub:
-                # TODO: Impl eventsub in flask
+                # TODO: Impl eventsub in flaskserver
                 if self._client.es:
                     self.log.info("Not starting event sub for flask server, already enabled in EventSub Websocket!")
                 else:
@@ -78,8 +77,8 @@ class FlaskServer(LoggingClass):
                 except ImportError and AttributeError:
                     self.log.warning(f'Cannot import {view}')
 
-        if temp:
-            self.app.register_blueprint(Auth)
+        # TODO: maybe not add this when its not needed? :)
+        self.app.register_blueprint(InternalOauth(self._client, self._client.config))
 
     def shutdown(self):
         self.log.info("Shutting down Flask Server")

@@ -15,18 +15,16 @@ class ClientConfig(Config):
 
     Attributes
     ----------
-    app_token : str
+    client_id : str
         The token for the twitch development app
-    app_secret : str
+    client_secret : str
         The secret for the twitch development app
-    redirect_uri : str
-        The redirect URI the internal server should reference for any awaiting user access tokens.
     log_level : str
         The logging level to use.
     """
 
-    app_token = ''
-    app_secret = ''
+    client_id = ''
+    client_secret = ''
 
     log_level = 'info'
     log_unknown_events = False
