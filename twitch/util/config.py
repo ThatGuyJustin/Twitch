@@ -21,6 +21,13 @@ class Config:
 
         if obj:
             self.__dict__.update(obj)
+            self._parse_nested_config(obj)
+
+    def _parse_nested_config(self, data):
+        for key, value in self.__annotations__.items():
+            if issubclass(value, Config):
+                if key in data:
+                    setattr(self, key, value(obj=data[key]))
 
     def get(self, key, default=None):
         return self.__dict__.get(key, default)
@@ -35,7 +42,10 @@ class Config:
 
         _, ext = os.path.splitext(path)
         Serializer.check_format(ext[1:])
-        inst.__dict__.update(Serializer.loads(ext[1:], data))
+        _data = Serializer.loads(ext[1:], data)
+
+        inst.__dict__.update(_data)
+        inst._parse_nested_config(_data)
         return inst
 
     def from_prefix(self, prefix):
@@ -55,4 +65,10 @@ class Config:
         self.__dict__.update(other)
 
     def to_dict(self):
-        return self.__dict__
+        result = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, Config):
+                result[key] = value.to_dict()
+            else:
+                result[key] = value
+        return result
