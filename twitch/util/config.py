@@ -1,3 +1,5 @@
+import inspect
+import logging
 import os
 
 from .serializer import Serializer
@@ -9,7 +11,6 @@ class Config:
             k: getattr(self, k) for k in dir(self.__class__)
         })
 
-        # issue `DeprecationWarning`s
         if hasattr(self.__class__, 'deprecated') and obj:
             for deprecated_key, replacement in self.__class__.deprecated.items():
                 if deprecated_key in obj.keys():
@@ -24,10 +25,16 @@ class Config:
             self._parse_nested_config(obj)
 
     def _parse_nested_config(self, data):
-        for key, value in self.__annotations__.items():
-            if issubclass(value, Config):
-                if key in data:
-                    setattr(self, key, value(obj=data[key]))
+        # Why is this failing??? I don't Understand
+        try:
+            for key, value in self.__annotations__.items():
+                if issubclass(value, Config):
+                    if key in data:
+                        setattr(self, key, value(obj=data[key]))
+        except AttributeError:
+            # FIXME: to allow for Non Typehint config classes.
+            logging.info('Can\'t parse nested config, Config Class Missing Type Hinting')
+
 
     def get(self, key, default=None):
         return self.__dict__.get(key, default)
@@ -64,9 +71,11 @@ class Config:
 
         self.__dict__.update(other)
 
-    def to_dict(self):
+    def to_dict(self, clean=False):
         result = {}
         for key, value in self.__dict__.items():
+            if clean and (callable(value) or key.startswith('__')):  # Skip methods and private attributes
+                continue
             if isinstance(value, Config):
                 result[key] = value.to_dict()
             else:
