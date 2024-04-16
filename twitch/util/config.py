@@ -25,16 +25,19 @@ class Config:
             self._parse_nested_config(obj)
 
     def _parse_nested_config(self, data):
-        # Why is this failing??? I don't Understand
         try:
             for key, value in self.__annotations__.items():
                 if issubclass(value, Config):
                     if key in data:
                         setattr(self, key, value(obj=data[key]))
         except AttributeError:
-            # FIXME: to allow for Non Typehint config classes.
-            logging.info('Can\'t parse nested config, Config Class Missing Type Hinting')
-
+            for key in dir(self):
+                _attr = getattr(self, key)
+                if key.startswith('__') or not inspect.isclass(_attr):
+                    continue
+                if issubclass(_attr, Config):
+                    logging.info("Nesting config with key '{0}'".format(key))
+                    setattr(self, key, _attr(obj=data[key]))
 
     def get(self, key, default=None):
         return self.__dict__.get(key, default)
