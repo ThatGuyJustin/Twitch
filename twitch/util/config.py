@@ -1,5 +1,4 @@
 import inspect
-import logging
 import os
 
 from .serializer import Serializer
@@ -30,15 +29,22 @@ class Config:
                 if issubclass(value, Config):
                     if key in data:
                         setattr(self, key, value(obj=data[key]))
+                elif isinstance(value, dict):
+                    if key in data:
+                        setattr(self, key, Config(obj=data[key]))
         except AttributeError:
             for key in dir(self):
                 _attr = getattr(self, key)
-                if key.startswith('__') or not inspect.isclass(_attr):
-                    continue
-                if issubclass(_attr, Config):
-                    logging.info("Nesting config with key '{0}'".format(key))
-                    setattr(self, key, _attr(obj=data[key]))
 
+                if key.startswith('__'):
+                    continue
+
+                try:
+                    if issubclass(_attr, Config):
+                        setattr(self, key, _attr(obj=data[key]))
+                except TypeError:
+                    if isinstance(_attr, dict):
+                        setattr(self, key, Config(obj=data[key]))
     def get(self, key, default=None):
         return self.__dict__.get(key, default)
 
