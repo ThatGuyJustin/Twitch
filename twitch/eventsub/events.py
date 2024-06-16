@@ -1,6 +1,6 @@
 from twitch.util.metaclass import with_metaclass
 
-from twitch.types.base import ModelMeta, Field, Model, text, ListField, datetime, SlottedModel, enum
+from twitch.types.base import ModelMeta, Field, Model, text, ListField, datetime, SlottedModel, enum, DictField
 from twitch.types.channel import ChannelPointsReward, ChannelSubscription, \
     ChannelSubscriptionMessage, HypeTrain, ChannelGuestStarState, ChannelPoll, ChannelPointsRewardRedemptionStatus, \
     ChannelPrediction, ChannelPredictionStatus, ShieldMode, ShoutOut, Goal, StreamOnlineType, \
@@ -156,6 +156,22 @@ class Broadcaster(SlottedModel):
     def broadcaster(self):
         return User(id=self.broadcaster_user_id, login=self.broadcaster_user_login,
                     name=self.broadcaster_user_name)
+
+
+class Session(SlottedModel):
+    id = Field(text)
+    status = Field(text)
+    connected_at = Field(datetime)
+    keepalive_timeout_seconds = Field(int)
+    reconnect_url = Field(text)
+    recovery_url = Field(text)
+
+
+class SessionWelcome(EventSubEvent):
+    """
+    Twitch Name: 'session_welcome'
+    """
+    session = Field(Session)
 
 
 @wraps_model(BaseEvent)
@@ -433,6 +449,14 @@ class ChannelPredictionEnd(EventSubEvent):
     """
     winning_outcome_id = Field(text)
     status = Field(enum(ChannelPredictionStatus))
+
+
+@wraps_model(ChannelSubscription)
+class ChannelSubscription(EventSubEvent):
+    """
+    Twitch Name: 'channel.subscription'
+    """
+    pass
 
 
 @wraps_model(ChannelSubscription)

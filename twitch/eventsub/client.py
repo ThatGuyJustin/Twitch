@@ -124,6 +124,7 @@ class EventSubClient(LoggingClass):
         self._heartbeat_task = gevent.spawn(self.heartbeat_task)
         self._ws_status = "CONNECTED"
         self._events.emit("WEBSOCKET_READY")
+        self._client.events.emit("session_welcome", data)
 
     def on_tw_keepalive(self, data):
         self.log.debug('Got keepalive event')
